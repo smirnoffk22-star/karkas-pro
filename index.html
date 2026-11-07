@@ -1,0 +1,2774 @@
+<!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Каркас-Про — проектирование модульных объектов</title>
+<style>
+:root{
+  --bg:#0e1216; --bg2:#121920; --panel:#161e26; --panel2:#1c2731; --line:#2a3742;
+  --text:#e7eef5; --muted:#8fa2b3; --accent:#ff8a3d; --accent2:#ffb37a;
+  --ok:#3ecf8e; --warn:#f5c451; --bad:#ef5f5f; --info:#58a9e0;
+  --shadow:0 10px 28px rgba(0,0,0,.35); --r:12px;
+}
+html[data-theme="light"]{
+  --bg:#f2f5f9; --bg2:#e8edf4; --panel:#fff; --panel2:#f6f9fc; --line:#d9e2ec;
+  --text:#14202b; --muted:#5a6c7d; --accent:#d95c14; --accent2:#a8430c; --shadow:0 8px 22px rgba(20,35,55,.1);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+h1,h2,h3,h4{margin:0 0 .5em;font-weight:650;line-height:1.25;letter-spacing:-.01em}
+h1{font-size:19px} h2{font-size:16px} h3{font-size:14.5px} h4{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted)}
+small{color:var(--muted)}
+header.top{position:sticky;top:0;z-index:50;background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.top-in{max-width:1500px;margin:0 auto;padding:9px 14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15.5px;white-space:nowrap}
+.brand .dot{width:10px;height:10px;border-radius:3px;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 0 12px var(--accent)}
+.top-actions{margin-left:auto;display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+nav.tabs{max-width:1500px;margin:0 auto;padding:0 14px 9px;display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+.tab{border:1px solid transparent;background:transparent;color:var(--muted);padding:7px 13px;border-radius:999px;cursor:pointer;font-size:13.5px;font-weight:600;white-space:nowrap}
+.tab:hover{color:var(--text);background:var(--panel)}
+.tab.active{background:var(--accent);color:#1a1206}
+html[data-theme="light"] .tab.active{color:#fff}
+main{max-width:1500px;margin:0 auto;padding:14px 14px 60px}
+section.view{display:none} section.view.active{display:block}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:14px;box-shadow:var(--shadow);margin-bottom:12px}
+.card-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.card-h h2,.card-h h3{margin:0}
+.spacer{margin-left:auto}
+.grid{display:grid;gap:11px}
+.g2{grid-template-columns:repeat(auto-fit,minmax(240px,1fr))}
+.g3{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.g4{grid-template-columns:repeat(auto-fit,minmax(140px,1fr))}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+label.f{display:block;font-size:11.5px;color:var(--muted);margin-bottom:3px;font-weight:700;text-transform:uppercase;letter-spacing:.03em}
+input,select,textarea,button{font:inherit;color:var(--text)}
+input[type=text],input[type=number],select,textarea{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 9px;min-height:36px;outline:none}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+input[type=number]{text-align:right}
+input.bad{border-color:var(--bad)}
+button.btn{background:var(--panel2);border:1px solid var(--line);border-radius:8px;padding:7px 12px;cursor:pointer;font-size:13px;font-weight:600;white-space:nowrap}
+button.btn:hover{border-color:var(--accent);color:var(--accent)}
+button.btn.primary{background:var(--accent);border-color:var(--accent);color:#1a1206}
+html[data-theme="light"] button.btn.primary{color:#fff}
+button.btn.ghost{background:transparent}
+button.btn.sm{padding:4px 8px;font-size:12px}
+button.btn.danger:hover{border-color:var(--bad);color:var(--bad)}
+.tbl-wrap{overflow:auto;border:1px solid var(--line);border-radius:9px}
+table{width:100%;border-collapse:collapse;font-size:12.5px;min-width:620px}
+th,td{padding:7px 9px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th{background:var(--panel2);font-size:11px;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);position:sticky;top:0;font-weight:700}
+th:first-child,td:first-child{text-align:left}
+tbody tr:hover{background:color-mix(in srgb,var(--accent) 6%,transparent)}
+td input,td select{min-height:29px;padding:3px 6px;font-size:12.5px}
+.chip{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:999px;font-size:11.5px;font-weight:700;border:1px solid var(--line);background:var(--panel2)}
+.chip.ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 40%,var(--line))}
+.chip.warn{color:var(--warn);border-color:color-mix(in srgb,var(--warn) 40%,var(--line))}
+.chip.bad{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 40%,var(--line))}
+.chip.info{color:var(--info);border-color:color-mix(in srgb,var(--info) 40%,var(--line))}
+.kpi{background:var(--panel2);border:1px solid var(--line);border-radius:9px;padding:10px 12px}
+.kpi .l{font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;font-weight:700}
+.kpi .v{font-size:20px;font-weight:750;margin-top:3px;font-variant-numeric:tabular-nums}
+.kpi .s{font-size:11.5px;color:var(--muted);margin-top:2px}
+.alert{border-radius:9px;padding:9px 11px;font-size:12.5px;border:1px solid var(--line);background:var(--panel2)}
+.alert.bad{border-color:var(--bad);color:var(--bad)}
+.alert.ok{border-color:var(--ok);color:var(--ok)}
+.alert.info{border-color:var(--info)}
+.muted{color:var(--muted)}
+.layout-3d{display:grid;grid-template-columns:320px 1fr;gap:12px;align-items:start}
+@media (max-width:900px){.layout-3d{grid-template-columns:1fr}}
+#canvasWrap{position:relative;background:var(--panel2);border:1px solid var(--line);border-radius:10px;overflow:hidden;height:min(74vh,760px)}
+#canvasWrap canvas{display:block;width:100%;height:100%}
+.view-btns{position:absolute;top:8px;left:8px;display:flex;gap:5px;flex-wrap:wrap;z-index:2}
+.view-btns button{background:color-mix(in srgb,var(--panel) 85%,transparent);border:1px solid var(--line);color:var(--text);border-radius:7px;padding:4px 9px;font-size:11.5px;cursor:pointer}
+.view-btns button:hover{border-color:var(--accent);color:var(--accent)}
+.legend-box{position:absolute;right:8px;bottom:8px;background:color-mix(in srgb,var(--panel) 88%,transparent);border:1px solid var(--line);border-radius:8px;padding:7px 9px;font-size:11px;z-index:2;max-width:210px}
+.legend-box div{display:flex;align-items:center;gap:6px;margin:2px 0}
+.legend-box i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.dim-line{font-size:11px;fill:var(--muted)}
+.calc-item{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.calc-item:last-child{border-bottom:0}
+.calc-item .r{font-variant-numeric:tabular-nums;white-space:nowrap}
+.total-line{display:flex;justify-content:space-between;gap:10px;padding:8px 0;font-size:14.5px;font-weight:700}
+.total-line.big{font-size:18px;border-top:2px solid var(--accent);margin-top:5px;padding-top:10px}
+details.formula{margin-top:9px;border:1px solid var(--line);border-radius:8px;padding:7px 10px;background:var(--panel2)}
+details.formula summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--muted)}
+details.formula pre{margin:7px 0 0;font:11.5px/1.55 ui-monospace,Menlo,monospace;white-space:pre-wrap}
+.toast{position:fixed;left:50%;bottom:20px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--panel);border:1px solid var(--accent);padding:9px 15px;border-radius:9px;box-shadow:var(--shadow);z-index:100;font-size:13px;transition:.2s}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;align-items:center;justify-content:center;padding:14px;z-index:90}
+.modal.open{display:flex}
+.modal-box{background:var(--panel);border:1px solid var(--line);border-radius:12px;max-width:620px;width:100%;max-height:88vh;overflow:auto;padding:16px;box-shadow:var(--shadow)}
+@media print{header.top,nav.tabs,.top-actions,.no-print{display:none!important}body{background:#fff;color:#000}section.view{display:none!important}section.view.active{display:block!important}.card{box-shadow:none;border:1px solid #bbb}}
+
+/* режим «только чертёж»: левая колонка скрыта, холст на всю ширину */
+.layout-3d.hide-params{grid-template-columns:1fr}
+.layout-3d.hide-params > div:first-child{display:none}
+
+#canvasWrap{position:relative}
+.drawer{position:fixed;top:0;right:0;height:100vh;width:360px;max-width:92vw;background:var(--panel);
+  border-left:1px solid var(--line);box-shadow:-12px 0 30px rgba(0,0,0,.35);
+  transform:translateX(102%);transition:transform .22s ease;z-index:80;overflow:auto;padding:14px}
+.drawer.open{transform:none}
+.drawer .card{margin:0;border:0;box-shadow:none;background:transparent;padding:0}
+.drawer-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:75;display:none}
+.drawer-backdrop.open{display:block}
+#drawBarBtn{display:flex;align-items:center;gap:6px}
+#btnOrtho90.active{background:var(--accent);border-color:var(--accent);color:#1a1206}
+html[data-theme="light"] #btnOrtho90.active{color:#fff}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="top-in">
+    <div class="brand"><span class="dot"></span> Каркас-Про</div>
+    <select id="projectSel" style="max-width:230px"></select>
+    <div class="top-actions">
+      <button class="btn sm" id="btnTheme">🌗 Тема</button>
+      <button class="btn sm" id="btnExport">Экспорт</button>
+      <button class="btn sm" id="btnImport">Импорт</button>
+      <button class="btn sm" id="btnSummary">Сводка</button>
+      <button class="btn sm ghost" id="btnDemo">Демо</button>
+    </div>
+  </div>
+  <nav class="tabs">
+    <button class="tab active" data-view="project">Проект</button>
+    <button class="tab" data-view="refs">Справочники</button>
+    <button class="tab" data-view="bom">Спецификация</button>
+    <button class="tab" data-view="cost">Смета</button>
+  </nav>
+</header>
+
+<main>
+  <!-- ================= ПРОЕКТ ================= -->
+  <section class="view active" id="view-project">
+    <div class="layout-3d hide-params">
+      <div>
+        <div class="card">
+          <div class="card-h"><h3>Параметры объекта</h3></div>
+          <div class="grid g2">
+            <div class="field"><label class="f">Длина, мм</label><input type="number" id="pLen" min="500" step="10" value="6000"></div>
+            <div class="field"><label class="f">Ширина, мм</label><input type="number" id="pWid" min="500" step="10" value="2400"></div>
+            <div class="field"><label class="f">Высота, мм</label><input type="number" id="pH" min="500" step="10" value="2500"></div>
+            <div class="field"><label class="f">Шаг стоек, мм</label><input type="number" id="pStep" min="200" step="50" value="1000"></div>
+          </div>
+          <hr style="border:0;border-top:1px solid var(--line);margin:10px 0">
+          <div class="grid g2">
+            <div class="field"><label class="f">Сечение рамы</label><select id="pFrameSec"></select></div>
+            <div class="field"><label class="f">Сечение стоек</label><select id="pPostSec"></select></div>
+            <div class="field"><label class="f">Обвязка / ригель</label><select id="pRailSec"></select></div>
+            <div class="field"><label class="f">Раскосы</label><select id="pBraceSec"></select></div>
+            <div class="field"><label class="f">Тип кровли</label><select id="pRoof"><option value="flat">плоская</option><option value="mono">односкатная</option><option value="gable" selected>двускатная</option></select></div>
+            <div class="field"><label class="f">Уклон / высота конька, мм</label><input type="number" id="pRise" min="0" step="10" value="300"></div>
+            <div class="field"><label class="f">Шаг стропил, мм</label><input type="number" id="pRafterStep" min="200" step="50" value="1000"></div>
+            <div class="field"><label class="f">Раскосы</label><select id="pBraces"><option value="1" selected>есть</option><option value="0">нет</option></select></div>
+          </div>
+          <hr style="border:0;border-top:1px solid var(--line);margin:10px 0">
+          <h4>Проёмы</h4>
+          <div id="openingsList"></div>
+          <button class="btn sm" id="btnAddOpening" style="margin-top:6px">+ Проём</button>
+          <hr style="border:0;border-top:1px solid var(--line);margin:10px 0">
+          <div class="row">
+            <button class="btn primary" id="btnBuild">Построить каркас</button>
+            <button class="btn" id="btnTemplate">Шаблоны</button>
+          </div>
+          <div class="hint" id="buildInfo" style="margin-top:8px"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><h3>Слои и этапы</h3></div>
+          <div id="layersBox"></div>
+          <div class="hint">Отключённые слои не рисуются и не попадают в смету.</div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-h"><h2>Модель 3D</h2><span class="chip" id="modelStats"></span>
+            <div class="spacer"></div>
+            <button class="btn sm no-print" id="btnShot">PNG</button></div>
+          <div class="row no-print" style="margin-bottom:8px">
+            <div class="field" style="flex:1 1 190px"><label class="f">Показ по этапам</label>
+              <select id="stageSel"><option value="-1">все этапы</option></select></div>
+            <label class="row" style="gap:6px;align-items:center;font-size:12px;margin-top:12px">
+              <input type="checkbox" id="stageCum" checked> нарастающим итогом
+            </label>
+            <button class="btn sm" id="btnAnim" style="margin-top:12px">▶ Анимация сборки</button>
+            <label class="row" style="gap:6px;align-items:center;font-size:12px;margin-top:12px">
+              <input type="checkbox" id="chkAnno"> размеры
+            </label>
+            <button class="btn sm primary" id="btnVisual" style="margin-top:12px">Презентация</button>
+            <button class="btn sm" id="btnFrameOnly" style="margin-top:12px">Только каркас</button>
+            <button class="btn sm" id="btnParamsToggle" style="margin-top:12px">Параметры</button>
+          </div>
+
+          <div class="card tight" id="drawTopBar" style="margin-bottom:8px;background:var(--panel2)">
+            <div class="row" style="gap:8px;flex-wrap:wrap;align-items:flex-end">
+              <div class="field" style="flex:0 0 150px"><label class="f">Чем чертить</label>
+                <select id="drawTool">
+                  <option value="off">выключено</option>
+                  <option value="line">линия (2 клика)</option>
+                  <option value="rect">прямоугольник</option>
+                  <option value="poly">полилиния</option>
+                </select></div>
+              <div class="field" style="flex:0 0 130px"><label class="f">Плоскость</label>
+                <select id="drawPlane">
+                  <option value="floor">пол (y = 0)</option>
+                  <option value="wallZ">стена Z</option>
+                  <option value="wallX">стена X</option>
+                </select></div>
+              <div class="field" style="flex:1 1 160px"><label class="f">Материал</label><select id="drawSec"></select></div>
+              <div class="field" style="flex:0 0 85px"><label class="f">Привязка</label><input type="number" id="drawSnap" value="100" step="10" min="1"></div>
+              <div class="field" style="flex:0 0 95px"><label class="f">Длина</label><input type="number" id="drawLen" placeholder="авто" step="10" min="0"></div>
+              <div class="field" style="flex:0 0 85px"><label class="f">Угол°</label><input type="number" id="drawAng" placeholder="авто" step="1"></div>
+              <button class="btn sm active" id="btnOrtho90">⯐ 90°</button>
+              <button class="btn sm" id="btnUndo">↶</button>
+              <button class="btn sm" id="btnRedo">↷</button>
+              <button class="btn sm ghost" id="btnDrawCancel">Сброс</button>
+              <button class="btn sm" id="btnDxfImport">Импорт DXF</button>
+              <input type="file" id="fileDxfDraw" accept=".dxf" hidden>
+              <button class="btn sm primary" id="btnNewBlank">С нуля</button>
+            </div>
+            <div class="hint" id="drawHint" style="margin-top:6px">Выбери инструмент и материал, затем щёлкай по модели.</div>
+          </div>
+          <div id="canvasWrap">
+            <div class="view-btns">
+              <button data-view3d="iso">Изометрия</button>
+              <button data-view3d="front">Спереди</button>
+              <button data-view3d="top">Сверху</button>
+              <button data-view3d="side">Сбоку</button>
+            </div>
+            <div class="legend-box" id="legendBox"></div>
+          </div>
+          <div class="hint" id="glFallback" style="display:none"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-h"><h3>Ручные элементы</h3></div>
+          <div id="manualList"></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3>Проверка модели</h3><div class="spacer"></div><span class="chip" id="checkChip"></span></div>
+          <div id="checkBox"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= СПРАВОЧНИКИ ================= -->
+  <section class="view" id="view-refs">
+    <div class="card">
+      <div class="card-h"><h2>Материалы и профили</h2><span class="chip" id="matCount"></span>
+        <div class="spacer"></div><button class="btn sm" id="btnAddMat">+ Позиция</button></div>
+      <div class="tbl-wrap"><table id="tblMat">
+        <thead><tr><th>Название</th><th>Тип</th><th>Сечение, мм</th><th>Ед.</th><th>Масса ед.</th><th>Цена за ед.</th><th>Отход, %</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <div class="hint">Для профилей масса погонного метра считается по сечению и плотности стали 7,85 г/см³. Можно переопределить вручную.</div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h2>Цеха и участки</h2><div class="spacer"></div><button class="btn sm" id="btnAddShop">+ Цех</button></div>
+      <div class="tbl-wrap"><table id="tblShop">
+        <thead><tr><th>Цех</th><th>Ставка, ₽/ч</th><th>Доплаты, %</th><th>Отчисления, %</th><th>Машино-час, ₽</th><th>Цеховые, %</th><th>Мастер, %</th><th>Руководитель, %</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <div class="hint">Стоимость часа = ставка × (1 + доплаты) × (1 + отчисления).</div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h2>Нормы времени</h2><div class="spacer"></div><button class="btn sm" id="btnAddNorm">+ Норма</button></div>
+      <div class="tbl-wrap"><table id="tblNorm">
+        <thead><tr><th>Операция</th><th>Единица</th><th>Норма</th><th>Цех</th><th>Этап</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <div class="hint">Например: резка профиля — 1,5 мин за рез; сварка — 8 мин на метр шва; покраска — 6 мин на м².</div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h2>Накладные и рентабельность</h2></div>
+      <div class="grid g3">
+        <div class="field"><label class="f">Общехозяйственные, %</label><input type="number" id="ovGeneral" min="0" step="0.5"></div>
+        <div class="field"><label class="f">Потери от брака, %</label><input type="number" id="ovDefect" min="0" step="0.5"></div>
+        <div class="field"><label class="f">Коммерческие, %</label><input type="number" id="ovCommercial" min="0" step="0.5"></div>
+        <div class="field"><label class="f">Наценка, %</label><input type="number" id="ovMarkup" min="0" step="0.5"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= СПЕЦИФИКАЦИЯ ================= -->
+  <section class="view" id="view-bom">
+    <div class="grid g4" id="bomKpi"></div>
+    <div class="card" style="margin-top:12px">
+      <div class="card-h"><h2>Спецификация</h2><span class="chip" id="bomCount"></span>
+        <div class="spacer"></div>
+        <button class="btn sm" id="btnBomCsv">CSV</button>
+        <button class="btn sm" id="btnBomPrint">🖨</button></div>
+      <div class="tbl-wrap"><table id="tblBom">
+        <thead><tr><th>Позиция</th><th>Слой</th><th>Этап</th><th>Кол-во</th><th>Длина, мм</th><th>Масса, кг</th><th>Площадь покраски, м²</th><th>Резы</th><th>Шов, м</th><th>Цена, ₽</th><th>Сумма, ₽</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <div class="total-line big" id="bomTotal"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-h"><h3>Раскрой профиля по хлыстам</h3><div class="spacer"></div>
+        <select id="stockLen" style="max-width:130px"><option value="6000">6000 мм</option><option value="12000">12000 мм</option></select>
+        <input type="number" id="kerf" value="3" step="0.5" min="0" style="max-width:90px" title="Ширина реза, мм">
+      </div>
+      <div id="cutBox"></div>
+    </div>
+  </section>
+
+  <!-- ================= СМЕТА ================= -->
+  <section class="view" id="view-cost">
+    <div class="grid g2">
+      <div class="card">
+        <div class="card-h"><h2>Смета</h2><span class="chip" id="costChip"></span></div>
+        <div id="costBox"></div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-h"><h3>Структура затрат</h3></div>
+          <div id="costChart"></div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3>Точка безубыточности</h3></div>
+          <div class="grid g3" id="breakEven"></div>
+          <div class="grid g2" style="margin-top:10px">
+            <div class="field"><label class="f">Постоянные расходы, ₽/мес</label><input type="number" id="beFixed" min="0" step="1000" value="250000"></div>
+            <div class="field"><label class="f">Выпуск, шт/мес (для загрузки)</label><input type="number" id="bePlan" min="1" step="1" value="8"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-h"><h3>Работы по цехам</h3></div>
+          <div class="tbl-wrap"><table id="tblShopCost" class="plain">
+            <thead><tr><th>Цех</th><th>Часы</th><th>Зарплата</th><th>Машины</th><th>Итого</th></tr></thead><tbody></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+    <div class="card no-print"><div class="row"><button class="btn" id="btnCostCsv">CSV сметы</button><button class="btn" id="btnCostPrint">🖨 Печать</button></div></div>
+  </section>
+
+
+
+</main>
+
+<div class="toast" id="toast"></div>
+<div class="modal" id="modal"><div class="modal-box" id="modalBox"></div></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+"use strict";
+/* ============================================================
+   ЭТАП 1.1 — УТИЛИТЫ, СОСТОЯНИЕ, ДЕМО-СПРАВОЧНИКИ
+   Данные модели — чистый JSON. Хранилище изолировано в load/save,
+   чтобы позже заменить localStorage на БД.
+   ============================================================ */
+const LS_KEY = "framecad_v11_clean";
+const STEEL_DENSITY = 7.85; // г/см³
+
+function lsGet(k) { try { return localStorage.getItem(k); } catch { return null; } }
+function lsSet(k, v) { try { localStorage.setItem(k, v); return true; } catch { return false; } }
+
+/* ---------- форматирование ---------- */
+function fmt(n, d = 2) {
+  if (n === null || n === undefined || !Number.isFinite(Number(n))) return "—";
+  return Number(n).toLocaleString("ru-RU", { minimumFractionDigits: d, maximumFractionDigits: d });
+}
+const money = (n) => fmt(n, 2) + " ₽";
+const mm = (n) => fmt(n, 1) + " мм";
+const kgf = (n) => fmt(n, 3) + " кг";
+const m2 = (n) => fmt(n, 3) + " м²";
+function nv(el, def = 0) {
+  if (!el) return def;
+  const v = parseFloat(String(el.value).replace(",", "."));
+  return Number.isFinite(v) ? v : def;
+}
+function sv(el, def = "") { return el ? String(el.value).trim() : def; }
+function uid(p = "id") { return p + "_" + Math.random().toString(36).slice(2, 9); }
+const r2 = (x) => Math.round((Number(x) || 0) * 100) / 100;
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+
+/* ---------- масса профиля ---------- */
+/* A = 2t(a + b − 2t) мм²; масса 1 м = A × 7,85 / 1000 кг */
+function profileArea(a, b, t) { return 2 * t * (a + b - 2 * t); }
+function profileMassPerM(a, b, t, density = STEEL_DENSITY) {
+  return profileArea(a, b, t) * density / 1000;
+}
+function sheetMassPerM2(thickness, density = STEEL_DENSITY) {
+  return thickness * density; // кг/м²: мм × г/см³
+}
+
+/* ---------- демо-справочник ---------- */
+function demoMaterials() {
+  const P = (id, name, a, b, t, price, waste = 5) => ({
+    id, name, type: "profile", a, b, t, unit: "м",
+    massPerUnit: r2(profileMassPerM(a, b, t) * 1000) / 1000, price, wastePct: waste, density: STEEL_DENSITY,
+  });
+  return [
+    P("sec20", "Труба 20×20×1,5", 20, 20, 1.5, 165),
+    P("sec40", "Труба 40×40×2", 40, 40, 2, 245),
+    P("sec6040", "Труба 60×40×2", 60, 40, 2, 305),
+    P("sec60", "Труба 60×60×3", 60, 60, 3, 470),
+    P("sec8040", "Труба 80×40×3", 80, 40, 3, 520),
+    { id: "ang40", name: "Уголок 40×40×4", type: "profile", a: 40, b: 40, t: 4, unit: "м", massPerUnit: r2(profileMassPerM(40, 40, 4)), price: 285, wastePct: 5, density: STEEL_DENSITY },
+    { id: "chan10", name: "Швеллер 10П", type: "profile", a: 100, b: 46, t: 4.5, unit: "м", massPerUnit: 8.59, price: 640, wastePct: 5, density: STEEL_DENSITY, manualMass: true },
+    { id: "sheet2", name: "Лист ст. 2 мм", type: "sheet", thicknessMm: 2, unit: "м²", massPerUnit: r2(sheetMassPerM2(2)), price: 1150, wastePct: 8, density: STEEL_DENSITY },
+    { id: "sandwich50", name: "Сэндвич-панель 50 мм", type: "panel", thicknessMm: 50, unit: "м²", massPerUnit: 11.5, price: 2350, wastePct: 7, density: 0 },
+    { id: "sandwich100", name: "Сэндвич-панель 100 мм", type: "panel", thicknessMm: 100, unit: "м²", massPerUnit: 16.2, price: 3100, wastePct: 7, density: 0 },
+    { id: "insul100", name: "Утеплитель 100 мм", type: "insulation", thicknessMm: 100, unit: "м²", massPerUnit: 3.2, price: 780, wastePct: 6, density: 0 },
+    { id: "osb9", name: "OSB-3 9 мм", type: "sheet", thicknessMm: 9, unit: "м²", massPerUnit: 5.9, price: 620, wastePct: 10, density: 0 },
+    { id: "proffloor", name: "Профнастил С8", type: "sheet", thicknessMm: 0.5, unit: "м²", massPerUnit: 5.4, price: 690, wastePct: 8, density: 0 },
+    { id: "win1200", name: "Окно ПВХ 1200×1200", type: "piece", unit: "шт", massPerUnit: 22, price: 9800, wastePct: 0, density: 0 },
+    { id: "door900", name: "Дверь металл. 900×2000", type: "piece", unit: "шт", massPerUnit: 48, price: 14500, wastePct: 0, density: 0 },
+    { id: "fastener", name: "Крепёж (саморезы, анкеры)", type: "piece", unit: "шт", massPerUnit: 0.02, price: 4.5, wastePct: 3, density: 0 },
+    { id: "paint", name: "Грунт-эмаль 3 в 1", type: "paint", unit: "м²", massPerUnit: 0.16, price: 210, wastePct: 5, density: 0 },
+  ];
+}
+
+function demoShops() {
+  return [
+    { id: "shop_prep", name: "Заготовительный", rate: 520, bonus: 15, social: 30.2, machineHour: 420, shopPct: 25, masterPct: 8, chiefPct: 4 },
+    { id: "shop_weld", name: "Сварочный", rate: 620, bonus: 20, social: 30.2, machineHour: 380, shopPct: 30, masterPct: 10, chiefPct: 5 },
+    { id: "shop_paint", name: "Малярный", rate: 560, bonus: 12, social: 30.2, machineHour: 240, shopPct: 28, masterPct: 8, chiefPct: 4 },
+    { id: "shop_assy", name: "Сборочный", rate: 600, bonus: 18, social: 30.2, machineHour: 260, shopPct: 26, masterPct: 10, chiefPct: 5 },
+  ];
+}
+
+function demoNorms() {
+  return [
+    { id: "n_cut", op: "Резка профиля", unit: "рез", minutes: 1.5, shopId: "shop_prep", stage: "Заготовка и резка" },
+    { id: "n_hole", op: "Сверление отверстий", unit: "отв", minutes: 1.1, shopId: "shop_prep", stage: "Заготовка и резка" },
+    { id: "n_weld", op: "Сварка каркаса", unit: "м шва", minutes: 8, shopId: "shop_weld", stage: "Сварка каркаса" },
+    { id: "n_clean", op: "Зачистка сварных швов", unit: "м шва", minutes: 3, shopId: "shop_weld", stage: "Зачистка" },
+    { id: "n_paint", op: "Грунтовка и покраска", unit: "м²", minutes: 6, shopId: "shop_paint", stage: "Грунтовка и покраска" },
+    { id: "n_sheath", op: "Монтаж обшивки", unit: "м²", minutes: 12, shopId: "shop_assy", stage: "Обшивка и утепление" },
+    { id: "n_insul", op: "Монтаж утеплителя", unit: "м²", minutes: 7, shopId: "shop_assy", stage: "Обшивка и утепление" },
+    { id: "n_window", op: "Установка окна/двери", unit: "шт", minutes: 55, shopId: "shop_assy", stage: "Монтаж окон и дверей" },
+    { id: "n_pack", op: "Упаковка и отгрузка", unit: "объект", minutes: 60, shopId: "shop_assy", stage: "Упаковка и отгрузка" },
+  ];
+}
+
+const STAGES = [
+  "Заготовка и резка", "Сварка каркаса", "Зачистка", "Грунтовка и покраска",
+  "Обшивка и утепление", "Монтаж окон и дверей", "Электрика и сантехника",
+  "Финишная сборка", "Упаковка и отгрузка",
+];
+
+function demoLayers() {
+  return [
+    { id: "frame", name: "Каркас", color: "#ff8a3d", on: true },
+    { id: "sheath", name: "Обшивка", color: "#58a9e0", on: true },
+    { id: "roof", name: "Кровля", color: "#9b7bdb", on: true },
+    { id: "insul", name: "Утепление", color: "#3ecf8e", on: true },
+    { id: "openings", name: "Окна и двери", color: "#f5c451", on: true },
+  ];
+}
+
+function demoProject(name = "Бытовка 6000×2400×2500") {
+  return {
+    id: uid("prj"),
+    schemaVersion: 2,
+    name,
+    createdAt: new Date().toISOString(),
+    params: {
+      len: 6000, wid: 2400, height: 2500, step: 1000,
+      frameSec: "sec60", postSec: "sec40", railSec: "sec40", braceSec: "sec20",
+      roof: "gable", rise: 300, rafterStep: 1000, braces: 1,
+      claddingId: "sandwich50", insulationId: "insul100", roofCladId: "proffloor",
+      floorId: "osb9",
+    },
+    openings: [
+      { id: uid("op"), wall: "front", x: 900, y: 500, w: 1200, h: 1200, kind: "window", itemId: "win1200" },
+      { id: uid("op"), wall: "front", x: 4200, y: 0, w: 900, h: 2000, kind: "door", itemId: "door900" },
+    ],
+    elements: [],
+    hiddenLayers: ["sheath", "roof", "insul"],
+    // ставки/цеха живут в общем state, а накладные — параметры объекта
+    overhead: { general: 18, defect: 2, commercial: 5, markup: 25, fixedMonthly: 250000, planQty: 8 },
+  };
+}
+
+function demoState() {
+  const prj = demoProject();
+  return {
+    version: 1,
+    materials: demoMaterials(),
+    shops: demoShops(),
+    norms: demoNorms(),
+    stages: [...STAGES],
+    layers: demoLayers(),
+    projects: [prj],
+    activeId: prj.id,
+    stock: { length: 6000, kerf: 3 },
+    ui: { theme: "dark" },
+  };
+}
+
+/* ---------- состояние ---------- */
+let state = null;
+function loadState() {
+  try {
+    const raw = lsGet(LS_KEY);
+    if (!raw) return demoState();
+    const s = JSON.parse(raw);
+    return normalize(s);
+  } catch (e) { console.warn("Состояние не прочитано, беру демо", e); return demoState(); }
+}
+function saveState() {
+  if (!lsSet(LS_KEY, JSON.stringify(state))) console.warn("localStorage недоступен — данные не сохраняются");
+}
+function normalize(s) {
+  const d = demoState();
+  const out = Object.assign({}, d, s || {});
+  for (const k of ["materials", "shops", "norms", "stages", "layers", "projects"]) if (!Array.isArray(out[k])) out[k] = d[k];
+  if (!out.projects.length) out.projects = d.projects;
+  if (!out.projects.some((p) => p.id === out.activeId)) out.activeId = out.projects[0].id;
+  out.projects = out.projects.map((p) => {
+    const proj = {
+      ...demoProject(p.name || "Объект"),
+      ...p,
+      params: Object.assign({}, demoProject().params, p.params || {}),
+      overhead: Object.assign({}, demoProject().overhead, p.overhead || {}),
+      openings: Array.isArray(p.openings) ? p.openings : [],
+      elements: Array.isArray(p.elements) ? p.elements : [],
+      hiddenLayers: Array.isArray(p.hiddenLayers) ? p.hiddenLayers : [],
+    };
+    // Миграция старой модели: элементы прежнего формата (кубы-проёмы, огромные панели)
+    // пересобираем заново, а лишние слои скрываем.
+    if ((proj.schemaVersion || 1) < 2) {
+      proj.schemaVersion = 2;
+      proj.elements = [];
+      proj.hiddenLayers = ["sheath", "roof", "insul"];
+    }
+    if (!proj.hiddenLayers.length && proj.schemaVersion >= 2) {
+      // ничего не трогаем: пользователь мог сознательно включить все слои
+    }
+    return proj;
+  });
+  out.stock = Object.assign({ length: 6000, kerf: 3 }, s?.stock || {});
+  return out;
+}
+const activeProject = () => state.projects.find((p) => p.id === state.activeId) || state.projects[0];
+const matById = (id) => state.materials.find((m) => m.id === id) || null;
+const shopById = (id) => state.shops.find((s) => s.id === id) || null;
+const normByOp = (op) => state.norms.find((n) => n.op === op) || null;
+const layerById = (id) => state.layers.find((l) => l.id === id) || { id, name: id, color: "#888" };
+
+/* ---------- UI-мелочи ---------- */
+let toastTimer = null;
+function toast(msg, ms = 2200) {
+  const el = document.getElementById("toast");
+  el.textContent = msg; el.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("show"), ms);
+}
+function openModal(html) { document.getElementById("modalBox").innerHTML = html; document.getElementById("modal").classList.add("open"); }
+function closeModal() { document.getElementById("modal").classList.remove("open"); }
+document.getElementById("modal")?.addEventListener("click", (e) => { if (e.target.id === "modal") closeModal(); });
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c])); }
+
+/* ============================================================
+   ЭТАП 1.2 — ГЕОМЕТРИЯ КАРКАСА (чистые функции, без DOM)
+   Координаты в мм: x — длина, y — высота, z — ширина.
+   ============================================================ */
+
+function P(x, y, z) { return { x, y, z }; }
+function dist3(a, b) { return Math.hypot(b.x - a.x, b.y - a.y, b.z - a.z); }
+
+/* Профильный элемент: балка/стойка между двумя точками */
+function mkProfile(secId, p1, p2, layer = "frame", stage = "Сварка каркаса", name = "") {
+  return {
+    id: uid("el"), kind: "profile", matId: secId, p1, p2, layer, stage,
+    name: name || (matById(secId)?.name || "Профиль"),
+  };
+}
+function mkPanel(matId, w, h, thk, pos, rot, layer, stage, name) {
+  return {
+    id: uid("el"), kind: "panel", matId, w, h, thk: thk || 0,
+    pos: pos || P(0, 0, 0), rot: rot || { x: 0, y: 0, z: 0 },
+    layer, stage, name: name || (matById(matId)?.name || "Панель"),
+  };
+}
+function mkPiece(matId, qty, pos, layer, stage, name, opts = {}) {
+  return {
+    id: uid("el"), kind: "piece", matId, qty: qty || 1,
+    pos: pos || P(0, 0, 0), layer, stage, name: name || (matById(matId)?.name || "Изделие"),
+    w: opts.w || 0, h: opts.h || 0, rot: opts.rot || { x: 0, y: 0, z: 0 },
+  };
+}
+
+/* --- вычитание проёмов из прямоугольника стены --- */
+function subtractOpenings(rect, openings) {
+  let rects = [rect];
+  openings.forEach((op) => {
+    const next = [];
+    rects.forEach((r) => {
+      const ix = Math.max(r.x, op.x), iy = Math.max(r.y, op.y);
+      const ax = Math.min(r.x + r.w, op.x + op.w), ay = Math.min(r.y + r.h, op.y + op.h);
+      if (ax <= ix || ay <= iy) { next.push(r); return; } // не пересекаются
+      // левая часть
+      if (ix > r.x) next.push({ x: r.x, y: r.y, w: ix - r.x, h: r.h });
+      // правая
+      if (ax < r.x + r.w) next.push({ x: ax, y: r.y, w: r.x + r.w - ax, h: r.h });
+      // нижняя
+      if (iy > r.y) next.push({ x: ix, y: r.y, w: ax - ix, h: iy - r.y });
+      // верхняя
+      if (ay < r.y + r.h) next.push({ x: ix, y: ay, w: ax - ix, h: r.y + r.h - ay });
+    });
+    rects = next;
+  });
+  return rects.filter((r) => r.w > 20 && r.h > 20);
+}
+
+/* главный генератор каркаса */
+function buildElements(params, openings) {
+  const L = Number(params.len), W = Number(params.wid), H = Number(params.height);
+  const step = Math.max(200, Number(params.step) || 1000);
+  const els = [];
+  const st = "Сварка каркаса";
+
+  const addPost = (x, z) => els.push(mkProfile(params.postSec, P(x, 0, z), P(x, H, z), "frame", st, "Стойка"));
+  const addRail = (a, b, sec, nm) => els.push(mkProfile(sec, a, b, "frame", st, nm));
+
+  /* --- нижняя обвязка --- */
+  addRail(P(0, 0, 0), P(L, 0, 0), params.railSec, "Обвязка нижняя");
+  addRail(P(0, 0, W), P(L, 0, W), params.railSec, "Обвязка нижняя");
+  addRail(P(0, 0, 0), P(0, 0, W), params.railSec, "Обвязка нижняя");
+  addRail(P(L, 0, 0), P(L, 0, W), params.railSec, "Обвязка нижняя");
+
+  /* --- стойки --- */
+  const xs = [];
+  for (let x = 0; x <= L + 0.1; x += step) xs.push(Math.min(x, L));
+  if (xs[xs.length - 1] < L - 1) xs.push(L);
+  const zs = [];
+  for (let z = step; z < W - 1; z += step) zs.push(z);
+
+  xs.forEach((x) => { addPost(x, 0); addPost(x, W); });
+  zs.forEach((z) => { addPost(0, z); addPost(L, z); });
+
+  /* --- верхняя обвязка --- */
+  const roof = params.roof || "gable";
+  const rise = Math.max(0, Number(params.rise) || 0);
+  addRail(P(0, H, 0), P(L, H, 0), params.railSec, "Обвязка верхняя");
+  addRail(P(0, H, W), P(L, H, W), params.railSec, "Обвязка верхняя");
+
+  if (roof === "gable") {
+    // торцевые обвязки на H + фронтонные стойки к коньку
+    addRail(P(0, H, 0), P(0, H, W), params.railSec, "Обвязка верхняя");
+    addRail(P(L, H, 0), P(L, H, W), params.railSec, "Обвязка верхняя");
+    // конёк
+    addRail(P(0, H + rise, W / 2), P(L, H + rise, W / 2), params.frameSec, "Конёк");
+    // стропила
+    const rstep = Math.max(300, Number(params.rafterStep) || 1000);
+    for (let x = 0; x <= L + 0.1; x += rstep) {
+      const xx = Math.min(x, L);
+      addRail(P(xx, H, 0), P(xx, H + rise, W / 2), params.frameSec, "Стропило");
+      addRail(P(xx, H, W), P(xx, H + rise, W / 2), params.frameSec, "Стропило");
+    }
+    // фронтонные стойки по торцам
+    [0, L].forEach((x) => {
+      for (let k = 1; k <= 3; k++) {
+        const z = (W / 2) * k / 4;
+        const hh = H + rise * (1 - Math.abs(z - W / 2) / (W / 2));
+        if (hh - H < 100) continue;   // слишком короткая стойка — не создаём
+        els.push(mkProfile(params.postSec, P(x, H, z), P(x, hh, z), "frame", st, "Фронтонная стойка"));
+        els.push(mkProfile(params.postSec, P(x, H, W - z), P(x, hh, W - z), "frame", st, "Фронтонная стойка"));
+      }
+    });
+  } else if (roof === "mono") {
+    addRail(P(0, H, W), P(L, H, W), params.railSec, "Обвязка верхняя");
+    addRail(P(0, H, 0), P(0, H + rise, W), params.frameSec, "Стропило");
+    addRail(P(L, H, 0), P(L, H + rise, W), params.frameSec, "Стропило");
+    const rstep = Math.max(300, Number(params.rafterStep) || 1000);
+    for (let x = rstep; x < L - 1; x += rstep) addRail(P(x, H, 0), P(x, H + rise, W), params.frameSec, "Стропило");
+  } else {
+    addRail(P(0, H, 0), P(0, H, W), params.railSec, "Обвязка верхняя");
+    addRail(P(L, H, 0), P(L, H, W), params.railSec, "Обвязка верхняя");
+    const rstep = Math.max(300, Number(params.rafterStep) || 1000);
+    for (let x = rstep; x < L - 1; x += rstep) addRail(P(x, H, 0), P(x, H, W), params.frameSec, "Балка перекрытия");
+  }
+
+  /* --- раскосы в углах (по одной в каждом углу) --- */
+  if (String(params.braces) === "1") {
+    const dl = Math.min(1200, L / 5), dh = Math.min(1200, H * 0.55);
+    const corners = [
+      [0, 0, 1, 1], [L, 0, -1, 1], [0, W, 1, -1], [L, W, -1, -1],
+    ];
+    corners.forEach(([x, z, sx, sz]) => {
+      els.push(mkProfile(params.braceSec, P(x, 0, z), P(x + sx * dl, dh, z + sz * dl), "frame", st, "Раскос"));
+    });
+  }
+
+  /* --- обшивка стен с проёмами --- */
+  const cladId = params.claddingId || "sandwich50";
+  const clad = matById(cladId);
+  const thk = Number(clad?.thicknessMm) || 50;
+  const walls = [
+    { id: "front", w: L, h: H, pos: P(L / 2, H / 2, 0), rot: { x: 0, y: 0, z: 0 } },
+    { id: "back", w: L, h: H, pos: P(L / 2, H / 2, W), rot: { x: 0, y: Math.PI, z: 0 } },
+    { id: "left", w: W, h: H, pos: P(0, H / 2, W / 2), rot: { x: 0, y: Math.PI / 2, z: 0 } },
+    { id: "right", w: W, h: H, pos: P(L, H / 2, W / 2), rot: { x: 0, y: -Math.PI / 2, z: 0 } },
+  ];
+  walls.forEach((wall) => {
+    const ops = (openings || []).filter((o) => o.wall === wall.id);
+    const rects = subtractOpenings({ x: 0, y: 0, w: wall.w, h: wall.h }, ops);
+    rects.forEach((r) => {
+      // локальные координаты относительно центра стены → мировые
+      const cx = r.x + r.w / 2 - wall.w / 2;
+      const cy = r.y + r.h / 2 - wall.h / 2;
+      const cos = Math.cos(wall.rot.y), sin = Math.sin(wall.rot.y);
+      const wx = wall.pos.x + cx * cos;
+      const wz = wall.pos.z - cx * sin;
+      els.push(mkPanel(cladId, r.w, r.h, thk, P(wx, wall.pos.y + cy, wz), { ...wall.rot }, "sheath", "Обшивка и утепление", "Обшивка стены"));
+    });
+  });
+
+  /* --- пол --- */
+  if (params.floorId) {
+    els.push(mkPanel(params.floorId, L, W, Number(matById(params.floorId)?.thicknessMm) || 9, P(L / 2, 0, W / 2), { x: 0, y: 0, z: 0 }, "sheath", "Обшивка и утепление", "Пол"));
+  }
+
+  /* --- утепление (условно по площади стен/кровли) --- */
+  if (params.insulationId) {
+    els.push(mkPanel(params.insulationId, L, W, 100, P(L / 2, H / 2, W / 2), { x: 0, y: 0, z: 0 }, "insul", "Обшивка и утепление", "Утеплитель (условный объём)"));
+  }
+
+  /* --- кровля --- */
+  const roofClad = params.roofCladId || "proffloor";
+  if (roof === "gable") {
+    const ang = Math.atan2(rise, W / 2);
+    const slope = Math.hypot(W / 2, rise);
+    els.push(mkPanel(roofClad, L, slope, 1, P(L / 2, H + rise / 2, W / 4), { x: -ang, y: 0, z: 0 }, "roof", "Упаковка и отгрузка", "Кровля скат"));
+    els.push(mkPanel(roofClad, L, slope, 1, P(L / 2, H + rise / 2, W * 3 / 4), { x: ang, y: Math.PI, z: 0 }, "roof", "Упаковка и отгрузка", "Кровля скат"));
+  } else if (roof === "mono") {
+    const ang = Math.atan2(rise, W);
+    const slope = Math.hypot(W, rise);
+    els.push(mkPanel(roofClad, L, slope, 1, P(L / 2, H + rise / 2, W / 2), { x: -ang, y: 0, z: 0 }, "roof", "Упаковка и отгрузка", "Кровля"));
+  } else {
+    els.push(mkPanel(roofClad, L, W, 1, P(L / 2, H, W / 2), { x: 0, y: 0, z: 0 }, "roof", "Упаковка и отгрузка", "Кровля"));
+  }
+
+  /* --- проёмы как штучные элементы --- */
+  (openings || []).forEach((op) => {
+    if (op.itemId) {
+      const wall = walls.find((w) => w.id === op.wall) || walls[0];
+      const cx = op.x + op.w / 2 - wall.w / 2;
+      const cos = Math.cos(wall.rot.y), sin = Math.sin(wall.rot.y);
+      els.push(mkPiece(op.itemId, 1,
+        P(wall.pos.x + cx * cos, op.y + op.h / 2, wall.pos.z - cx * sin),
+        "openings", "Монтаж окон и дверей",
+        op.kind === "door" ? "Дверь" : "Окно",
+        { w: op.w, h: op.h, rot: { x: 0, y: wall.rot.y, z: 0 } }));
+    }
+  });
+
+  /* --- крепёж и краска как расходники --- */
+  const paintArea = els.filter((e) => e.kind === "profile").reduce((a, e) => a + profilePaintArea(e), 0);
+  if (paintArea > 0) els.push(mkPiece("paint", Math.ceil(paintArea * 100) / 100, P(0, 0, 0), "frame", "Грунтовка и покраска", "Грунт-эмаль"));
+  const fastenerQty = Math.ceil(els.filter((e) => e.kind !== "piece").length * 8);
+  els.push(mkPiece("fastener", fastenerQty, P(0, 0, 0), "frame", "Обшивка и утепление", "Крепёж"));
+
+  return els;
+}
+
+/* площадь покраски профиля: периметр сечения × длина */
+function profilePaintArea(el) {
+  const sec = matById(el.matId);
+  if (!sec || el.kind !== "profile") return 0;
+  const perim = 2 * ((sec.a || 0) + (sec.b || 0)) / 1000; // м
+  return perim * dist3(el.p1, el.p2) / 1000;             // м²
+}
+function profileLength(el) { return el.kind === "profile" ? dist3(el.p1, el.p2) : 0; }
+
+/* ============================================================
+   BOM — спецификация
+   ============================================================ */
+function buildBom(elements, layersOff) {
+  const visible = elements.filter((e) => !(layersOff || []).includes(e.layer));
+  const groups = new Map();
+
+  visible.forEach((e) => {
+    const mat = matById(e.matId);
+    if (!mat) return;
+    let lenMm = 0, areaM2 = 0, qty = 0, mass = 0, paint = 0, cuts = 0, weldM = 0;
+
+    if (e.kind === "profile") {
+      lenMm = profileLength(e);
+      qty = 1;
+      const perM = mat.manualMass ? mat.massPerUnit : profileMassPerM(mat.a, mat.b, mat.t);
+      mass = perM * lenMm / 1000;
+      paint = profilePaintArea(e);
+      cuts = 2;
+      const perim = 2 * ((mat.a || 0) + (mat.b || 0)) / 1000;
+      weldM = perim * 2;
+    } else if (e.kind === "panel") {
+      areaM2 = e.w * e.h / 1e6;
+      qty = 1;
+      mass = (mat.massPerUnit || 0) * areaM2;
+      paint = 0; cuts = 0; weldM = 0;
+    } else {
+      qty = e.qty || 1;
+      mass = (mat.massPerUnit || 0) * qty;
+      lenMm = 0; areaM2 = 0; paint = 0; cuts = 0; weldM = 0;
+    }
+
+    const key = `${e.matId}|${e.layer}|${e.stage}|${e.kind}`;
+    const g = groups.get(key) || {
+      matId: e.matId, name: mat.name, unit: mat.unit, layer: e.layer, stage: e.stage, kind: e.kind,
+      qty: 0, lenMm: 0, mass: 0, areaM2: 0, paint: 0, cuts: 0, weldM: 0, price: mat.price, wastePct: mat.wastePct || 0,
+    };
+    g.qty += qty;
+    g.lenMm += lenMm;
+    g.mass += mass;
+    g.areaM2 += areaM2;
+    g.paint += paint;
+    g.cuts += cuts;
+    g.weldM += weldM;
+    groups.set(key, g);
+  });
+
+  const rows = [...groups.values()].map((g) => {
+    // в чём измеряем: профиль — метры, панель/лист — м², штучное — шт
+    const amount = g.unit === "м" ? g.lenMm / 1000 : g.unit === "м²" ? g.areaM2 : g.qty;
+    const base = amount * g.price;
+    const total = base * (1 + g.wastePct / 100);
+    return { ...g, amount, base, total };
+  }).sort((a, b) => b.total - a.total);
+
+  const total = rows.reduce((a, r) => a + r.total, 0);
+  const massTotal = rows.reduce((a, r) => a + r.mass * (1 + r.wastePct / 100), 0);
+  return { rows, total, massTotal, count: visible.length };
+}
+
+/* ============================================================
+   РАСКРОЙ ПРОФИЛЯ ПО ХЛЫСТАМ
+   ============================================================ */
+function cutProfile(elements, layersOff, stockLen, kerf) {
+  const visible = elements.filter((e) => !(layersOff || []).includes(e.layer) && e.kind === "profile");
+  const bySec = {};
+  visible.forEach((e) => {
+    const len = Math.ceil(profileLength(e));
+    if (len <= 0) return;
+    (bySec[e.matId] = bySec[e.matId] || []).push(len);
+  });
+
+  const result = [];
+  Object.entries(bySec).forEach(([matId, lens]) => {
+    const mat = matById(matId);
+    const parts = [...lens].sort((a, b) => b - a);
+    const bars = [];
+    parts.forEach((len) => {
+      if (len > stockLen) { bars.push({ over: true, parts: [len], used: len, offcut: 0 }); return; }
+      let bar = bars.find((b) => !b.over && b.used + len + kerf <= stockLen + 0.001);
+      if (!bar) { bar = { over: false, parts: [], used: 0, offcut: 0 }; bars.push(bar); }
+      bar.parts.push(len);
+      bar.used += len + kerf;
+      bar.offcut = stockLen - bar.used;
+    });
+    const scrap = bars.reduce((a, b) => a + Math.max(0, b.offcut), 0);
+    const scrapMass = mat ? (mat.manualMass ? mat.massPerUnit : profileMassPerM(mat.a, mat.b, mat.t)) * scrap / 1000 : 0;
+    result.push({
+      matId, name: mat?.name || matId, stockLen, bars, parts: parts.length,
+      barsCount: bars.length, scrapMm: scrap, scrapMass,
+      scrapCost: scrapMass * (mat?.price || 0) / (mat?.unit === "м" ? 1 : 1),
+      barsCost: bars.length * stockLen / 1000 * (mat?.price || 0),
+    });
+  });
+  return result;
+}
+
+/* ============================================================
+   ПРОВЕРКИ МОДЕЛИ
+   ============================================================ */
+function validateModel(elements, params) {
+  const issues = [];
+  const key = (e) => `${e.matId}|${Math.round(e.p1?.x)},${Math.round(e.p1?.y)},${Math.round(e.p1?.z)}|${Math.round(e.p2?.x)},${Math.round(e.p2?.y)},${Math.round(e.p2?.z)}`;
+  const seen = new Set();
+  let shortCount = 0, dupCount = 0, outCount = 0;
+
+  elements.forEach((e) => {
+    if (e.kind === "profile") {
+      const len = profileLength(e);
+      if (len < 100) { shortCount++; if (issues.length < 12) issues.push({ t: "bad", m: `Элемент «${e.name}» короче 100 мм: ${fmt(len, 1)} мм` }); }
+      const k = key(e);
+      if (seen.has(k)) { dupCount++; } else seen.add(k);
+      const lim = { x: [0, params.len], y: [0, params.height + (params.rise || 0) + 10], z: [0, params.wid] };
+      const inside = (p) => p.x >= lim.x[0] - 5 && p.x <= lim.x[1] + 5 && p.y >= lim.y[0] - 5 && p.y <= lim.y[1] + 5 && p.z >= lim.z[0] - 5 && p.z <= lim.z[1] + 5;
+      if (!inside(e.p1) || !inside(e.p2)) { outCount++; if (issues.length < 12) issues.push({ t: "warn", m: `«${e.name}» выходит за габарит объекта` }); }
+    }
+  });
+  if (dupCount) issues.push({ t: "warn", m: `Дубликатов элементов: ${dupCount}` });
+  if (outCount) issues.push({ t: "warn", m: `Элементов вне габарита: ${outCount}` });
+  if (shortCount) issues.push({ t: "bad", m: `Слишком коротких элементов: ${shortCount}` });
+  if (!issues.length) issues.push({ t: "ok", m: "Замечаний нет: длины, дубликаты и габариты в норме" });
+  return { issues, shortCount, dupCount, outCount };
+}
+
+/* ============================================================
+   ЭТАП 1.3 — РАБОТЫ ПО ЦЕХАМ И СМЕТА
+   ============================================================ */
+
+/* сколько часов по норме на данную работу */
+function normHours(norm, qty) {
+  if (!norm) return 0;
+  return (Number(norm.minutes) || 0) * qty / 60;
+}
+
+/* стоимость часа сотрудника цеха */
+function shopHourCost(shop) {
+  const rate = Number(shop.rate) || 0;
+  const accrued = rate * (1 + (Number(shop.bonus) || 0) / 100);
+  const withSocial = accrued * (1 + (Number(shop.social) || 0) / 100);
+  return { accrued, withSocial, social: withSocial - accrued };
+}
+
+/* собираем объёмы работ из элементов */
+function collectWork(elements, layersOff) {
+  const visible = elements.filter((e) => !(layersOff || []).includes(e.layer));
+  const w = {
+    cuts: 0, weldM: 0, paintArea: 0, sheathArea: 0, insulArea: 0,
+    openings: 0, objects: 1, profiles: 0, panels: 0,
+  };
+  visible.forEach((e) => {
+    if (e.kind === "profile") {
+      w.profiles++;
+      const mat = matById(e.matId);
+      const lenM = profileLength(e) / 1000;
+      w.cuts += 2;
+      const perim = 2 * ((mat?.a || 0) + (mat?.b || 0)) / 1000;
+      w.weldM += perim * 2;                 // два стыка на элемент
+      w.paintArea += profilePaintArea(e);
+    } else if (e.kind === "panel") {
+      w.panels++;
+      const area = e.w * e.h / 1e6;
+      if (e.layer === "sheath" || e.layer === "roof") w.sheathArea += area;
+      if (e.layer === "insul") w.insulArea += area;
+    } else if (e.kind === "piece") {
+      if (e.layer === "openings") w.openings += e.qty || 1;
+    }
+  });
+  return w;
+}
+
+/* работы по нормам → по цехам и этапам */
+function calcWork(elements, layersOff) {
+  const w = collectWork(elements, layersOff);
+  const operations = [
+    { op: "Резка профиля", qty: w.cuts },
+    { op: "Сварка каркаса", qty: w.weldM },
+    { op: "Зачистка сварных швов", qty: w.weldM },
+    { op: "Грунтовка и покраска", qty: w.paintArea },
+    { op: "Монтаж обшивки", qty: w.sheathArea },
+    { op: "Монтаж утеплителя", qty: w.insulArea },
+    { op: "Установка окна/двери", qty: w.openings },
+    { op: "Упаковка и отгрузка", qty: 1 },
+  ];
+
+  const shops = new Map();
+  const stages = new Map();
+
+  operations.forEach(({ op, qty }) => {
+    if (qty <= 0) return;
+    const norm = normByOp(op);
+    if (!norm) return;
+    const shop = shopById(norm.shopId);
+    if (!shop) return;
+    const hours = normHours(norm, qty);
+    const hc = shopHourCost(shop);
+
+    const payroll = hours * hc.withSocial;
+    const machine = hours * (Number(shop.machineHour) || 0);
+    const overheadPct = (Number(shop.masterPct) || 0) + (Number(shop.chiefPct) || 0);
+    const overhead = payroll * overheadPct / 100;
+    const total = payroll + machine + overhead;
+
+    const s = shops.get(shop.id) || { id: shop.id, name: shop.name, hours: 0, payroll: 0, machine: 0, overhead: 0, total: 0, shopPct: shop.shopPct || 0 };
+    s.hours += hours; s.payroll += payroll; s.machine += machine; s.overhead += overhead; s.total += total;
+    shops.set(shop.id, s);
+
+    const st = stages.get(norm.stage) || { stage: norm.stage, hours: 0, total: 0 };
+    st.hours += hours; st.total += total;
+    stages.set(norm.stage, st);
+  });
+
+  const shopRows = [...shops.values()].map((s) => ({ ...s, shopCost: s.payroll * (Number(s.shopPct) || 0) / 100 }));
+  const workTotal = shopRows.reduce((a, s) => a + s.total, 0);
+  const shopOverhead = shopRows.reduce((a, s) => a + s.shopCost, 0);
+  const payrollTotal = shopRows.reduce((a, s) => a + s.payroll, 0);
+
+  return {
+    work: w, shops: shopRows, stages: [...stages.values()],
+    workTotal, shopOverhead, payrollTotal,
+    hoursTotal: shopRows.reduce((a, s) => a + s.hours, 0),
+  };
+}
+
+/* полная смета объекта */
+function calcEstimate() {
+  const p = activeProject();
+  const layersOff = p.hiddenLayers || [];
+  const bom = buildBom(p.elements, layersOff);
+  const work = calcWork(p.elements, layersOff);
+  const ov = p.overhead || {};
+
+  const materials = bom.total;
+  const works = work.workTotal;
+  const shopCost = work.shopOverhead;
+
+  const production = materials + works + shopCost;
+  const general = production * (Number(ov.general) || 0) / 100 * 0; // ниже считаем от зарплаты, как в ТЗ
+  const generalByPayroll = work.payrollTotal * (Number(ov.general) || 0) / 100;
+  const defect = (production + generalByPayroll) * (Number(ov.defect) || 0) / 100;
+  const prodCost = production + generalByPayroll + defect;
+  const commercial = prodCost * (Number(ov.commercial) || 0) / 100;
+  const full = prodCost + commercial;
+  const markup = Number(ov.markup) || 0;
+  const price = full * (1 + markup / 100);
+  const profit = price - full;
+
+  const variable = materials + works;
+  const margin = price - variable;
+  const fixed = Number(ov.fixedMonthly) || 0;
+  const breakEven = margin > 0 ? Math.ceil(fixed / margin) : null;
+
+  return {
+    bom, work, materials, works, shopCost, generalByPayroll, defect,
+    production, prodCost, commercial, full, price, profit, markup,
+    variable, margin, fixed, breakEven,
+    marginPct: full > 0 ? profit / full * 100 : 0,
+    revenueMarginPct: price > 0 ? profit / price * 100 : 0,
+  };
+}
+
+/* ============================================================
+   ЭТАП 1.4 — 3D-ПРОСМОТР (Three.js 0.128.0)
+   Единицы сцены — миллиметры, как в модели.
+   ============================================================ */
+let three = null;
+
+function init3D() {
+  const wrap = document.getElementById("canvasWrap");
+  if (typeof THREE === "undefined") {
+    document.getElementById("glFallback").style.display = "block";
+    document.getElementById("glFallback").innerHTML =
+      '<div class="alert bad">Библиотека Three.js не загрузилась (нет интернета или CDN недоступен). Расчёты и спецификация работают, 3D — нет.</div>';
+    return;
+  }
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(32, wrap.clientWidth / wrap.clientHeight, 10, 200000);
+
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+    renderer.shadowMap.enabled = false; // тени отключены — мешают читать каркас
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    if ("toneMapping" in renderer) {
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.15;
+    }
+  } catch (e) {
+    document.getElementById("glFallback").style.display = "block";
+    document.getElementById("glFallback").innerHTML =
+      '<div class="alert bad">WebGL недоступен в этом браузере — 3D-просмотр выключен. Все расчёты, спецификация и смета работают.</div>';
+    console.warn("WebGL недоступен:", e);
+    return false;
+  }
+  renderer.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+  renderer.setSize(wrap.clientWidth, wrap.clientHeight);
+  wrap.appendChild(renderer.domElement);
+
+  const controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.08;
+
+  // студийный свет: заполняющий + основной с тенями + контровой
+  const hemi = new THREE.HemisphereLight(0xdfe9f2, 0x1a2229, 0.55);
+  scene.add(hemi);
+  const ambient = new THREE.AmbientLight(0xffffff, 0.22);
+  scene.add(ambient);
+
+  const dir = new THREE.DirectionalLight(0xffffff, 1.25);
+  dir.position.set(8000, 12000, 6000);
+  dir.castShadow = false;
+  dir.shadow.mapSize.width = 2048;
+  dir.shadow.mapSize.height = 2048;
+  dir.shadow.bias = -0.0008;
+  dir.shadow.normalBias = 2;
+  scene.add(dir);
+
+  const dir2 = new THREE.DirectionalLight(0x8fb6d6, 0.35);
+  dir2.position.set(-6000, 4000, -5000);
+  scene.add(dir2);
+
+  // подложка, ловящая тень — даёт «приятный» объём
+  const ground = new THREE.Mesh(
+    new THREE.PlaneGeometry(60000, 60000),
+    new THREE.ShadowMaterial({ color: 0x000000, opacity: 0.42 })
+  );
+  ground.rotation.x = -Math.PI / 2;
+  ground.position.y = -1.5;
+  ground.receiveShadow = false;
+  ground.visible = false;
+  scene.add(ground);
+
+  const grid = new THREE.GridHelper(30000, 30, 0x3a4a58, 0x25313b);
+  grid.position.y = -1;
+  scene.add(grid);
+  const axes = new THREE.AxesHelper(1500);
+  scene.add(axes);
+
+  const group = new THREE.Group();
+  scene.add(group);
+  const annotations = new THREE.Group();   // размеры и выноски поверх модели
+  scene.add(annotations);
+
+  three = { scene, camera, renderer, controls, group, grid, axes, annotations, ground, dir, frameId: 0 };
+
+  const animate = () => {
+    three.frameId = requestAnimationFrame(animate);
+    controls.update();
+    renderer.render(scene, camera);
+  };
+  animate();
+
+  const ro = new ResizeObserver(() => {
+    const w = wrap.clientWidth, h = wrap.clientHeight;
+    if (!w || !h) return;
+    camera.aspect = w / h;
+    camera.updateProjectionMatrix();
+    renderer.setSize(w, h);
+  });
+  ro.observe(wrap);
+  return true;
+}
+
+/* --- построение сцены по модели --- */
+function rebuildScene() {
+  if (!three) return;
+  const p = activeProject();
+  const g = three.group;
+  while (g.children.length) {
+    const c = g.children.pop();
+    c.geometry?.dispose?.();
+    if (Array.isArray(c.material)) c.material.forEach((m) => m.dispose()); else c.material?.dispose?.();
+  }
+
+  let count = 0;
+
+  p.elements.forEach((el) => {
+    if (typeof isElementVisible === "function" ? !isElementVisible(el) : (p.hiddenLayers || []).includes(el.layer)) return;
+    const color = new THREE.Color(layerById(el.layer).color || "#ff8a3d");
+    let mesh = null;
+
+    if (el.kind === "profile") {
+      const sec = matById(el.matId) || { a: 40, b: 40 };
+      const a = Number(sec.a) || 40, b = Number(sec.b) || 40;
+      const len = dist3(el.p1, el.p2);
+      if (len < 0.5) return;
+      const geo = new THREE.BoxGeometry(len, a, b);
+      const mat = new THREE.MeshStandardMaterial({ color, metalness: 0.55, roughness: 0.45 });
+      mesh = new THREE.Mesh(geo, mat);
+      // контурные рёбра — дают «инженерный» объём, как на рендере
+      const edges = new THREE.LineSegments(
+        new THREE.EdgesGeometry(geo, 25),
+        new THREE.LineBasicMaterial({ color: 0x0a0e12, transparent: true, opacity: 0.55 })
+      );
+      mesh.add(edges);
+      const mid = new THREE.Vector3((el.p1.x + el.p2.x) / 2, (el.p1.y + el.p2.y) / 2, (el.p1.z + el.p2.z) / 2);
+      mesh.position.copy(mid);
+      const dirV = new THREE.Vector3(el.p2.x - el.p1.x, el.p2.y - el.p1.y, el.p2.z - el.p1.z).normalize();
+      mesh.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), dirV);
+    } else if (el.kind === "panel") {
+      const thk = Math.max(2, Number(el.thk) || 20);
+      const geo = new THREE.BoxGeometry(el.w, el.h, thk);
+      // панели нарочно полупрозрачные и тонкие, чтобы не закрывать каркас
+      const opac = el.layer === "insul" ? 0.10 : el.layer === "roof" ? 0.16 : 0.22;
+      const mat = new THREE.MeshStandardMaterial({
+        color, metalness: 0.08, roughness: 0.9,
+        transparent: true, opacity: opac, depthWrite: false,
+        side: THREE.DoubleSide,
+      });
+      mesh = new THREE.Mesh(geo, mat);
+      const edgesP = new THREE.LineSegments(
+        new THREE.EdgesGeometry(geo, 30),
+        new THREE.LineBasicMaterial({ color: 0x0a0e12, transparent: true, opacity: 0.35 })
+      );
+      mesh.add(edgesP);
+      mesh.position.set(el.pos.x, el.pos.y, el.pos.z);
+      mesh.rotation.set(el.rot.x || 0, el.rot.y || 0, el.rot.z || 0);
+    } else {
+      // окно/дверь: плоская панель по фактическому размеру проёма
+      const w = Number(el.w) || 0, h = Number(el.h) || 0;
+      const geo = (w > 0 && h > 0) ? new THREE.BoxGeometry(w, h, 50) : new THREE.BoxGeometry(400, 400, 400);
+      const mat = new THREE.MeshStandardMaterial({
+        color, metalness: 0.25, roughness: 0.55,
+        transparent: true, opacity: (w > 0 ? 0.55 : 0.75), side: THREE.DoubleSide,
+      });
+      mesh = new THREE.Mesh(geo, mat);
+      const edgesP = new THREE.LineSegments(
+        new THREE.EdgesGeometry(geo, 30),
+        new THREE.LineBasicMaterial({ color: 0x0a0e12, transparent: true, opacity: 0.4 })
+      );
+      mesh.add(edgesP);
+      mesh.position.set(el.pos.x, el.pos.y, el.pos.z);
+      if (el.rot) mesh.rotation.set(el.rot.x || 0, el.rot.y || 0, el.rot.z || 0);
+    }
+
+    if (mesh) {
+      mesh.castShadow = false;
+      mesh.receiveShadow = false;
+      g.add(mesh); count++;
+    }
+  });
+
+  // размеры объекта нужны для масштаба сетки и осей
+  const L = Number(p.params.len) || 1000;
+  const W = Number(p.params.wid) || 1000;
+  three.grid.scale.setScalar(Math.max(1, Math.max(L, W) / 6000));
+  three.axes.scale.setScalar(Math.max(0.5, Math.max(L, W) / 8000));
+
+  document.getElementById("modelStats").textContent = count ? `${count} элементов` : "модель пуста";
+  if (typeof buildAnnotations === "function") buildAnnotations();
+  setView("iso", true);
+}
+
+/* --- виды --- */
+function setView(kind, first) {
+  if (!three) return;
+  const p = activeProject();
+  const L = p.params.len, W = p.params.wid, H = p.params.height + (p.params.rise || 0);
+  const cx = L / 2, cy = H / 2, cz = W / 2;
+  const span = Math.max(L, W, H);
+  const cam = three.camera;
+
+  if (kind === "front") cam.position.set(cx, cy, cz + span * 1.9);
+  else if (kind === "top") cam.position.set(cx, cy + span * 2.1, cz + 1);
+  else if (kind === "side") cam.position.set(cx + span * 1.9, cy, cz);
+  else cam.position.set(cx + span * 1.25, cy + span * 0.9, cz + span * 1.45);
+
+  cam.fov = kind === "iso" ? 30 : 42;
+  cam.updateProjectionMatrix();
+  cam.up.set(0, 1, 0);
+  if (kind === "top") cam.up.set(0, 0, -1);
+  cam.lookAt(cx, cy, cz);
+  three.controls.target.set(cx, cy, cz);
+  three.controls.update();
+}
+
+function exportModelPng() {
+  if (!three) { toast("3D недоступен"); return; }
+  three.renderer.render(three.scene, three.camera);
+  const url = three.renderer.domElement.toDataURL("image/png");
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `model-${Date.now()}.png`;
+  a.click();
+}
+
+/* ============================================================
+   ЭТАП 1.5 — ИНТЕРФЕЙС И ИНИЦИАЛИЗАЦИЯ
+   ============================================================ */
+
+/* ---------- справочники ---------- */
+function renderMaterials() {
+  const tb = document.querySelector("#tblMat tbody");
+  tb.innerHTML = state.materials.map((m) => `
+    <tr data-id="${m.id}">
+      <td><input type="text" data-f="name" value="${esc(m.name)}" style="min-width:180px"></td>
+      <td>
+        <select data-f="type">
+          ${[["profile", "профиль"], ["sheet", "лист"], ["panel", "панель"], ["insulation", "утеплитель"], ["piece", "штучное"], ["paint", "покраска"]]
+            .map(([v, t]) => `<option value="${v}" ${m.type === v ? "selected" : ""}>${t}</option>`).join("")}
+        </select>
+      </td>
+      <td>${m.type === "profile" ? `<span class="row" style="gap:3px">
+            <input type="number" data-f="a" value="${m.a ?? 0}" style="width:62px" title="высота">
+            <input type="number" data-f="b" value="${m.b ?? 0}" style="width:62px" title="ширина">
+            <input type="number" data-f="t" value="${m.t ?? 0}" style="width:52px" title="толщина стенки">
+          </span>` : `<input type="number" data-f="thicknessMm" value="${m.thicknessMm ?? 0}" style="width:80px">`}</td>
+      <td><select data-f="unit">${["м", "м²", "шт", "кг"].map((u) => `<option ${m.unit === u ? "selected" : ""}>${u}</option>`).join("")}</select></td>
+      <td><input type="number" data-f="massPerUnit" value="${m.massPerUnit ?? 0}" step="0.001" style="width:90px"></td>
+      <td><input type="number" data-f="price" value="${m.price ?? 0}" step="0.01" style="width:95px"></td>
+      <td><input type="number" data-f="wastePct" value="${m.wastePct ?? 0}" step="0.5" style="width:70px"></td>
+      <td><button class="btn sm ghost danger" data-del="mat">✕</button></td>
+    </tr>`).join("");
+  document.getElementById("matCount").textContent = state.materials.length + " поз.";
+
+  tb.querySelectorAll("input,select").forEach((inp) => inp.addEventListener("change", () => {
+    const m = matById(inp.closest("tr").dataset.id); if (!m) return;
+    const f = inp.dataset.f;
+    if (f === "name" || f === "unit" || f === "type") m[f] = inp.value;
+    else m[f] = Math.max(0, nv(inp));
+    if (m.type === "profile" && ["a", "b", "t"].includes(f)) {
+      m.massPerUnit = r2(profileMassPerM(m.a, m.b, m.t) * 1000) / 1000;
+      m.manualMass = false;
+      renderMaterials();
+    }
+    saveState(); fillSecSelects(); renderBom(); renderCost();
+  }));
+  tb.querySelectorAll("[data-del=mat]").forEach((b) => b.addEventListener("click", () => {
+    const id = b.closest("tr").dataset.id;
+    state.materials = state.materials.filter((m) => m.id !== id);
+    saveState(); renderMaterials(); fillSecSelects(); renderBom(); renderCost();
+  }));
+}
+
+function renderShops() {
+  const tb = document.querySelector("#tblShop tbody");
+  tb.innerHTML = state.shops.map((s) => {
+    const hc = shopHourCost(s);
+    return `<tr data-id="${s.id}">
+      <td><input type="text" data-f="name" value="${esc(s.name)}"></td>
+      <td><input type="number" data-f="rate" value="${s.rate}" step="10" style="width:85px"></td>
+      <td><input type="number" data-f="bonus" value="${s.bonus}" step="1" style="width:70px"></td>
+      <td><input type="number" data-f="social" value="${s.social}" step="0.1" style="width:75px"></td>
+      <td><input type="number" data-f="machineHour" value="${s.machineHour}" step="10" style="width:95px"></td>
+      <td><input type="number" data-f="shopPct" value="${s.shopPct}" step="1" style="width:70px"></td>
+      <td><input type="number" data-f="masterPct" value="${s.masterPct}" step="1" style="width:70px"></td>
+      <td><input type="number" data-f="chiefPct" value="${s.chiefPct}" step="1" style="width:70px"></td>
+      <td><button class="btn sm ghost danger" data-del="shop">✕</button></td>
+    </tr>`;
+  }).join("");
+  tb.querySelectorAll("input").forEach((inp) => inp.addEventListener("change", () => {
+    const s = shopById(inp.closest("tr").dataset.id); if (!s) return;
+    const f = inp.dataset.f;
+    s[f] = f === "name" ? inp.value : Math.max(0, nv(inp));
+    saveState(); renderCost();
+  }));
+  tb.querySelectorAll("[data-del=shop]").forEach((b) => b.addEventListener("click", () => {
+    state.shops = state.shops.filter((s) => s.id !== b.closest("tr").dataset.id);
+    saveState(); renderShops(); renderCost();
+  }));
+}
+
+function renderNorms() {
+  const tb = document.querySelector("#tblNorm tbody");
+  tb.innerHTML = state.norms.map((n) => `
+    <tr data-id="${n.id}">
+      <td><input type="text" data-f="op" value="${esc(n.op)}" style="min-width:190px"></td>
+      <td><input type="text" data-f="unit" value="${esc(n.unit)}" style="width:80px"></td>
+      <td><input type="number" data-f="minutes" value="${n.minutes}" step="0.1" style="width:85px"></td>
+      <td><select data-f="shopId">${state.shops.map((s) => `<option value="${s.id}" ${s.id === n.shopId ? "selected" : ""}>${esc(s.name)}</option>`).join("")}</select></td>
+      <td><select data-f="stage">${state.stages.map((s) => `<option ${s === n.stage ? "selected" : ""}>${esc(s)}</option>`).join("")}</select></td>
+      <td><button class="btn sm ghost danger" data-del="norm">✕</button></td>
+    </tr>`).join("");
+  tb.querySelectorAll("input,select").forEach((inp) => inp.addEventListener("change", () => {
+    const n = state.norms.find((x) => x.id === inp.closest("tr").dataset.id); if (!n) return;
+    const f = inp.dataset.f;
+    n[f] = ["minutes"].includes(f) ? Math.max(0, nv(inp)) : inp.value;
+    saveState(); renderCost();
+  }));
+  tb.querySelectorAll("[data-del=norm]").forEach((b) => b.addEventListener("click", () => {
+    state.norms = state.norms.filter((n) => n.id !== b.closest("tr").dataset.id);
+    saveState(); renderNorms(); renderCost();
+  }));
+}
+
+/* ---------- слои ---------- */
+function renderLayers() {
+  const p = activeProject();
+  const box = document.getElementById("layersBox");
+  box.innerHTML = state.layers.map((l) => `
+    <label class="row" style="justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--line)">
+      <span class="row" style="gap:8px">
+        <input type="checkbox" data-layer="${l.id}" ${p.hiddenLayers.includes(l.id) ? "" : "checked"}>
+        <i style="width:10px;height:10px;border-radius:2px;background:${l.color};display:inline-block"></i>
+        ${esc(l.name)}
+      </span>
+      <small>${(p.elements || []).filter((e) => e.layer === l.id).length} эл.</small>
+    </label>`).join("");
+  box.querySelectorAll("[data-layer]").forEach((chk) => chk.addEventListener("change", () => {
+    const id = chk.dataset.layer;
+    p.hiddenLayers = chk.checked ? p.hiddenLayers.filter((x) => x !== id) : [...p.hiddenLayers, id];
+    saveState(); rebuildScene(); renderBom(); renderCost(); renderChecks();
+  }));
+}
+
+/* ---------- параметры ---------- */
+function fillSecSelects() {
+  const list = state.materials.filter((m) => m.type === "profile");
+  const html = list.map((m) => `<option value="${m.id}">${esc(m.name)}</option>`).join("");
+  ["pFrameSec", "pPostSec", "pRailSec", "pBraceSec"].forEach((id) => {
+    const el = document.getElementById(id); if (!el) return;
+    const prev = el.value; el.innerHTML = html;
+    if ([...el.options].some((o) => o.value === prev)) el.value = prev;
+  });
+}
+function readParams() {
+  const p = activeProject().params;
+  return {
+    ...p,
+    len: Math.max(500, nv(document.getElementById("pLen"), 6000)),
+    wid: Math.max(500, nv(document.getElementById("pWid"), 2400)),
+    height: Math.max(500, nv(document.getElementById("pH"), 2500)),
+    step: Math.max(200, nv(document.getElementById("pStep"), 1000)),
+    frameSec: document.getElementById("pFrameSec").value,
+    postSec: document.getElementById("pPostSec").value,
+    railSec: document.getElementById("pRailSec").value,
+    braceSec: document.getElementById("pBraceSec").value,
+    roof: document.getElementById("pRoof").value,
+    rise: Math.max(0, nv(document.getElementById("pRise"), 300)),
+    rafterStep: Math.max(300, nv(document.getElementById("pRafterStep"), 1000)),
+    braces: document.getElementById("pBraces").value,
+  };
+}
+function writeParams(p) {
+  document.getElementById("pLen").value = p.len;
+  document.getElementById("pWid").value = p.wid;
+  document.getElementById("pH").value = p.height;
+  document.getElementById("pStep").value = p.step;
+  document.getElementById("pFrameSec").value = p.frameSec;
+  document.getElementById("pPostSec").value = p.postSec;
+  document.getElementById("pRailSec").value = p.railSec;
+  document.getElementById("pBraceSec").value = p.braceSec;
+  document.getElementById("pRoof").value = p.roof;
+  document.getElementById("pRise").value = p.rise;
+  document.getElementById("pRafterStep").value = p.rafterStep;
+  document.getElementById("pBraces").value = String(p.braces ?? 1);
+}
+
+/* ---------- проёмы ---------- */
+function renderOpenings() {
+  const p = activeProject();
+  const box = document.getElementById("openingsList");
+  box.innerHTML = (p.openings || []).map((o, i) => `
+    <div class="row" data-oi="${i}" style="margin-bottom:5px;gap:5px">
+      <select data-of="wall" style="width:88px">
+        ${[["front", "перед"], ["back", "зад"], ["left", "лев"], ["right", "прав"]]
+          .map(([v, t]) => `<option value="${v}" ${o.wall === v ? "selected" : ""}>${t}</option>`).join("")}
+      </select>
+      <select data-of="kind" style="width:86px">
+        <option value="window" ${o.kind === "window" ? "selected" : ""}>окно</option>
+        <option value="door" ${o.kind === "door" ? "selected" : ""}>дверь</option>
+      </select>
+      <input type="number" data-of="x" value="${o.x}" placeholder="x" style="width:62px" title="отступ по стене, мм">
+      <input type="number" data-of="y" value="${o.y}" placeholder="y" style="width:62px" title="высота от пола, мм">
+      <input type="number" data-of="w" value="${o.w}" style="width:62px" title="ширина">
+      <input type="number" data-of="h" value="${o.h}" style="width:62px" title="высота">
+      <button class="btn sm ghost danger" data-odel="${i}">✕</button>
+    </div>`).join("") || `<div class="muted">Проёмов нет</div>`;
+
+  box.querySelectorAll("input,select").forEach((inp) => inp.addEventListener("change", () => {
+    const i = +inp.closest("[data-oi]").dataset.oi;
+    const o = p.openings[i]; if (!o) return;
+    const f = inp.dataset.of;
+    o[f] = ["wall", "kind"].includes(f) ? inp.value : Math.max(0, nv(inp));
+    if (f === "kind") o.itemId = o.kind === "door" ? "door900" : "win1200";
+    saveState();
+  }));
+  box.querySelectorAll("[data-odel]").forEach((b) => b.addEventListener("click", () => {
+    p.openings.splice(+b.dataset.odel, 1);
+    saveState(); renderOpenings();
+  }));
+}
+
+/* ---------- сборка модели ---------- */
+function doBuild(silent = false) {
+  const p = activeProject();
+  p.params = readParams();
+  p.elements = buildElements(p.params, p.openings || []);
+  saveState();
+  rebuildScene();
+  renderLayers(); renderBom(); renderCost(); renderChecks();
+  if (!silent) toast(`Каркас построен: ${p.elements.length} элементов`);
+  document.getElementById("buildInfo").textContent =
+    `${p.params.len}×${p.params.wid}×${p.params.height} мм · шаг ${p.params.step} мм · элементов ${p.elements.length}`;
+}
+
+/* ---------- проверки ---------- */
+function renderChecks() {
+  const p = activeProject();
+  const v = validateModel(p.elements, p.params);
+  const box = document.getElementById("checkBox");
+  document.getElementById("checkChip").textContent = v.issues[0]?.t === "ok" ? "в норме" : "есть замечания";
+  document.getElementById("checkChip").className = "chip " + (v.issues[0]?.t === "ok" ? "ok" : "warn");
+  box.innerHTML = v.issues.map((i) => `<div class="alert ${i.t === "ok" ? "ok" : i.t === "bad" ? "bad" : "info"}" style="margin-bottom:6px">${esc(i.m)}</div>`).join("");
+}
+
+/* ---------- BOM ---------- */
+function renderBom() {
+  const p = activeProject();
+  const bom = buildBom(p.elements, p.hiddenLayers);
+  const tb = document.querySelector("#tblBom tbody");
+  document.getElementById("bomCount").textContent = bom.rows.length + " позиций";
+  tb.innerHTML = bom.rows.map((r) => `
+    <tr>
+      <td>${esc(r.name)}</td>
+      <td>${esc(layerById(r.layer).name)}</td>
+      <td>${esc(r.stage)}</td>
+      <td class="num">${fmt(r.amount, r.unit === "шт" ? 0 : 2)} ${r.unit}</td>
+      <td class="num">${r.kind === "profile" ? fmt(r.lenMm / Math.max(1, r.qty), 0) : "—"}</td>
+      <td class="num">${fmt(r.mass, 2)}</td>
+      <td class="num">${fmt(r.paint, 2)}</td>
+      <td class="num">${r.cuts || "—"}</td>
+      <td class="num">${r.weldM ? fmt(r.weldM, 2) : "—"}</td>
+      <td class="num">${money(r.price)}</td>
+      <td class="num"><b>${money(r.total)}</b></td>
+    </tr>`).join("") || `<tr><td colspan="11" class="muted">Модель пуста — построй каркас</td></tr>`;
+  document.getElementById("bomTotal").textContent = "";
+  document.getElementById("bomTotal").innerHTML = `<span>Итого материалы (с отходами)</span><span>${money(bom.total)}</span>`;
+
+  document.getElementById("bomKpi").innerHTML = `
+    <div class="kpi"><div class="l">Элементов</div><div class="v">${fmt(bom.count, 0)}</div><div class="s">видимых в модели</div></div>
+    <div class="kpi"><div class="l">Масса металла</div><div class="v">${fmt(bom.massTotal, 1)} кг</div><div class="s">с отходами</div></div>
+    <div class="kpi"><div class="l">Материалы</div><div class="v">${money(bom.total)}</div><div class="s">${bom.rows.length} позиций</div></div>
+    <div class="kpi"><div class="l">Работы</div><div class="v">${money(calcWork(p.elements, p.hiddenLayers).workTotal)}</div><div class="s">по цехам</div></div>`;
+
+  renderCut();
+}
+
+/* ---------- раскрой ---------- */
+function renderCut() {
+  const p = activeProject();
+  const stockLen = Number(document.getElementById("stockLen")?.value) || 6000;
+  const kerf = nv(document.getElementById("kerf"), 3);
+  const data = cutProfile(p.elements, p.hiddenLayers, stockLen, kerf);
+  const box = document.getElementById("cutBox");
+  if (!data.length) { box.innerHTML = `<div class="muted">Профилей нет</div>`; return; }
+  box.innerHTML = data.map((d) => `
+    <div style="margin-bottom:12px">
+      <div class="row" style="justify-content:space-between">
+        <b>${esc(d.name)}</b>
+        <span class="chip ${d.bars.some((b) => b.over) ? "bad" : "info"}">хлыстов ${d.barsCount} × ${stockLen} мм</span>
+      </div>
+      <div class="hint">деталей ${d.parts} · обрезки ${fmt(d.scrapMm / 1000, 2)} м (${fmt(d.scrapMass, 2)} кг) · стоимость хлыстов ${money(d.barsCost)}</div>
+      ${d.bars.some((b) => b.over) ? `<div class="alert bad" style="margin-top:6px">Есть детали длиннее хлыста — нужен стык или хлыст 12000 мм</div>` : ""}
+    </div>`).join("");
+}
+
+/* ---------- смета ---------- */
+function renderCost() {
+  const p = activeProject();
+  const e = calcEstimate();
+  const ov = p.overhead;
+
+  document.getElementById("costChip").textContent = `${fmt(e.marginPct, 1)} % рентабельности`;
+  document.getElementById("costBox").innerHTML = `
+    <div class="calc-item"><span>Материалы (с отходами)</span><span class="r">${money(e.materials)}</span></div>
+    <div class="calc-item"><span>Работы по цехам</span><span class="r">${money(e.works)}</span></div>
+    <div class="calc-item"><span>Цеховые расходы</span><span class="r">${money(e.shopCost)}</span></div>
+    <div class="calc-item"><span>Общехозяйственные (${fmt(ov.general, 1)} % от зарплаты)</span><span class="r">${money(e.generalByPayroll)}</span></div>
+    <div class="calc-item"><span>Потери от брака (${fmt(ov.defect, 1)} %)</span><span class="r">${money(e.defect)}</span></div>
+    <div class="total-line"><span>Производственная себестоимость</span><span>${money(e.prodCost)}</span></div>
+    <div class="calc-item"><span>Коммерческие (${fmt(ov.commercial, 1)} %)</span><span class="r">${money(e.commercial)}</span></div>
+    <div class="total-line big"><span>Полная себестоимость</span><span>${money(e.full)}</span></div>
+    <div class="total-line"><span>Цена (+${fmt(e.markup, 1)} %)</span><span style="color:var(--accent)">${money(e.price)}</span></div>
+    <div class="total-line"><span>Прибыль</span><span>${money(e.profit)}</span></div>
+    <div class="row" style="margin-top:6px">
+      <span class="chip ok">К себестоимости: ${fmt(e.marginPct, 1)} %</span>
+      <span class="chip info">К выручке: ${fmt(e.revenueMarginPct, 1)} %</span>
+    </div>
+    <details class="formula"><summary>Как считалось</summary><pre>${formulaCost(e, p)}</pre></details>`;
+
+  // структура затрат
+  const parts = [
+    { k: "Материалы", v: e.materials },
+    { k: "Работы", v: e.works },
+    { k: "Цеховые", v: e.shopCost },
+    { k: "Общехоз и брак", v: e.generalByPayroll + e.defect },
+    { k: "Коммерческие", v: e.commercial },
+  ];
+  const total = parts.reduce((a, x) => a + x.v, 0) || 1;
+  const max = Math.max(...parts.map((x) => x.v), 1);
+  document.getElementById("costChart").innerHTML = parts.map((x) => `
+    <div style="margin-bottom:9px">
+      <div class="row" style="justify-content:space-between;font-size:12.5px">
+        <span>${x.k}</span><b>${money(x.v)} · ${fmt(x.v / total * 100, 0)} %</b></div>
+      <div style="height:9px;background:var(--panel2);border-radius:5px;overflow:hidden;margin-top:3px">
+        <div style="height:100%;width:${x.v / max * 100}%;background:linear-gradient(90deg,var(--accent),var(--accent2))"></div>
+      </div>
+    </div>`).join("");
+
+  // точка безубыточности
+  const plan = Math.max(1, nv(document.getElementById("bePlan"), 8));
+  document.getElementById("breakEven").innerHTML = `
+    <div class="kpi"><div class="l">Постоянные/мес</div><div class="v">${money(e.fixed)}</div><div class="s">задаётся вручную</div></div>
+    <div class="kpi"><div class="l">Маржа с изделия</div><div class="v">${money(e.margin)}</div><div class="s">цена − переменные</div></div>
+    <div class="kpi"><div class="l">Критический объём</div><div class="v">${e.breakEven ? fmt(e.breakEven, 0) + " шт/мес" : "—"}</div><div class="s">при плане ${plan} шт: ${e.breakEven && plan >= e.breakEven ? "покрывает" : "не покрывает"}</div></div>`;
+
+  // работы по цехам
+  const tb = document.querySelector("#tblShopCost tbody");
+  tb.innerHTML = e.work.shops.map((s) => `
+    <tr><td>${esc(s.name)}</td><td class="num">${fmt(s.hours, 1)}</td>
+      <td class="num">${money(s.payroll)}</td><td class="num">${money(s.machine)}</td>
+      <td class="num"><b>${money(s.total)}</b></td></tr>`).join("")
+    || `<tr><td colspan="5" class="muted">Работ нет</td></tr>`;
+}
+
+function formulaCost(e, p) {
+  const w = e.work;
+  return [
+    `МАТЕРИАЛЫ = Σ (количество × цена × (1 + отход)) = ${money(e.materials)}`,
+    `  профилей: ${w.work.profiles} шт, панелей: ${w.work.panels} шт`,
+    ``,
+    `РАБОТЫ = Σ по операциям (нормо-часы × стоимость часа + машино-часы + мастер/рук.)`,
+    `  резка: ${fmt(w.work.cuts, 0)} резов`,
+    `  сварка: ${fmt(w.work.weldM, 2)} м шва`,
+    `  покраска: ${fmt(w.work.paintArea, 2)} м²`,
+    `  обшивка: ${fmt(w.work.sheathArea, 2)} м²`,
+    `  утеплитель: ${fmt(w.work.insulArea, 2)} м²`,
+    `  всего часов: ${fmt(w.hoursTotal, 1)} ч`,
+    `  итого работы: ${money(e.works)}`,
+    ``,
+    `ЦЕХОВЫЕ = Σ (зарплата цеха × % цеховых) = ${money(e.shopCost)}`,
+    `ПРОИЗВОДСТВЕННАЯ = материалы + работы + цеховые + общехоз + брак`,
+    `  = ${money(e.materials)} + ${money(e.works)} + ${money(e.shopCost)} + ${money(e.generalByPayroll)} + ${money(e.defect)} = ${money(e.prodCost)}`,
+    `КОММЕРЧЕСКИЕ = ${fmt(p.overhead.commercial, 1)} % × производственная = ${money(e.commercial)}`,
+    `ПОЛНАЯ = ${money(e.prodCost)} + ${money(e.commercial)} = ${money(e.full)}`,
+    `ЦЕНА = полная × (1 + ${fmt(e.markup, 1)} %) = ${money(e.price)}`,
+    `ПРИБЫЛЬ = ${money(e.price)} − ${money(e.full)} = ${money(e.profit)}`,
+    ``,
+    `ТОЧКА БЕЗУБЫТОЧНОСТИ = постоянные / маржа = ${money(e.fixed)} / ${money(e.margin)} = ${e.breakEven ?? "∞"} шт/мес`,
+  ].join("\n");
+}
+
+/* ---------- экспорт/импорт и CSV через окно ---------- */
+function showTextModal(title, text, hint) {
+  openModal(`<h3>${esc(title)}</h3>
+    ${hint ? `<p class="hint">${esc(hint)}</p>` : ""}
+    <textarea id="expText" style="min-height:260px;font:12px ui-monospace,monospace">${esc(text)}</textarea>
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary" id="expCopy">Копировать</button>
+      <button class="btn ghost" id="expClose">Закрыть</button>
+    </div>`);
+  document.getElementById("expClose").addEventListener("click", closeModal);
+  document.getElementById("expCopy").addEventListener("click", async () => {
+    const ta = document.getElementById("expText");
+    ta.select();
+    try { await navigator.clipboard.writeText(ta.value); toast("Скопировано"); }
+    catch { document.execCommand("copy"); toast("Скопировано"); }
+  });
+}
+function exportJson() {
+  showTextModal("Экспорт данных (JSON)", JSON.stringify(state, null, 2),
+    "Скопируй текст и сохрани — это полная резервная копия справочников и проектов.");
+}
+function importJson() {
+  openModal(`<h3>Импорт данных</h3>
+    <p class="hint">Вставь ранее скопированный JSON. Текущие данные будут заменены.</p>
+    <textarea id="impText" style="min-height:260px;font:12px ui-monospace,monospace" placeholder='{"version":1,...}'></textarea>
+    <div class="row" style="margin-top:10px">
+      <button class="btn primary" id="impOk">Импортировать</button>
+      <button class="btn ghost" id="impCancel">Отмена</button>
+    </div>`);
+  document.getElementById("impCancel").addEventListener("click", closeModal);
+  document.getElementById("impOk").addEventListener("click", () => {
+    try {
+      const data = JSON.parse(document.getElementById("impText").value);
+      if (!data || !Array.isArray(data.materials)) throw new Error("не похоже на файл приложения");
+      state = normalize(data);
+      saveState(); renderAll(); closeModal(); toast("Импорт выполнен");
+    } catch (err) { toast("Ошибка импорта: " + err.message); }
+  });
+}
+function bomCsv() {
+  const p = activeProject();
+  const bom = buildBom(p.elements, p.hiddenLayers);
+  const rows = [["Позиция", "Слой", "Этап", "Кол-во", "Ед.", "Длина, мм", "Масса, кг", "Покраска, м²", "Резы", "Шов, м", "Цена", "Сумма"]];
+  bom.rows.forEach((r) => rows.push([
+    r.name, layerById(r.layer).name, r.stage, fmt(r.amount, 2), r.unit,
+    r.kind === "profile" ? fmt(r.lenMm / Math.max(1, r.qty), 0) : "", fmt(r.mass, 2), fmt(r.paint, 2),
+    r.cuts || "", r.weldM ? fmt(r.weldM, 2) : "", fmt(r.price, 2), fmt(r.total, 2),
+  ]));
+  rows.push(["", "", "", "", "", "", "", "", "", "", "ИТОГО", fmt(bom.total, 2)]);
+  showTextModal("Спецификация CSV", rows.map((r) => r.join(";")).join("\n"), "Разделитель — точка с запятой, можно вставить в Excel.");
+}
+function costCsv() {
+  const e = calcEstimate();
+  const rows = [
+    ["Статья", "Сумма, ₽"],
+    ["Материалы", fmt(e.materials, 2)],
+    ["Работы", fmt(e.works, 2)],
+    ["Цеховые", fmt(e.shopCost, 2)],
+    ["Общехозяйственные", fmt(e.generalByPayroll, 2)],
+    ["Брак", fmt(e.defect, 2)],
+    ["Производственная себестоимость", fmt(e.prodCost, 2)],
+    ["Коммерческие", fmt(e.commercial, 2)],
+    ["Полная себестоимость", fmt(e.full, 2)],
+    ["Цена", fmt(e.price, 2)],
+    ["Прибыль", fmt(e.profit, 2)],
+  ];
+  showTextModal("Смета CSV", rows.map((r) => r.join(";")).join("\n"));
+}
+
+/* ---------- шаблоны ---------- */
+const TEMPLATES = [
+  { id: "bytovka", name: "Бытовка 6000×2400×2500", len: 6000, wid: 2400, height: 2500, step: 1000, roof: "gable", rise: 300 },
+  { id: "toilet", name: "Уличный туалет 2000×1500×2400", len: 2000, wid: 1500, height: 2400, step: 1000, roof: "mono", rise: 200 },
+  { id: "banya", name: "Баня 4000×3000×2400", len: 4000, wid: 3000, height: 2400, step: 1000, roof: "gable", rise: 400 },
+  { id: "module", name: "Модульный блок 8000×3000×2800", len: 8000, wid: 3000, height: 2800, step: 1000, roof: "gable", rise: 400 },
+];
+function templatesModal() {
+  openModal(`<h3>Шаблоны объектов</h3>
+    ${TEMPLATES.map((t) => `<label class="row" style="justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer">
+      <span class="row" style="gap:8px"><input type="radio" name="tpl" value="${t.id}"> ${esc(t.name)}</span>
+      <small>${t.len}×${t.wid}×${t.height}</small></label>`).join("")}
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="tplOk">Применить</button>
+      <button class="btn ghost" id="tplCancel">Отмена</button>
+    </div>`);
+  document.getElementById("tplCancel").addEventListener("click", closeModal);
+  document.getElementById("tplOk").addEventListener("click", () => {
+    const sel = document.querySelector('input[name=tpl]:checked');
+    if (!sel) { toast("Выбери шаблон"); return; }
+    applyTemplate(sel.value); closeModal();
+  });
+}
+function applyTemplate(id) {
+  const t = TEMPLATES.find((x) => x.id === id); if (!t) return;
+  const p = activeProject();
+  p.params = { ...p.params, len: t.len, wid: t.wid, height: t.height, step: t.step, roof: t.roof, rise: t.rise };
+  p.name = t.name;
+  p.elements = [];
+  // проёмы под шаблон
+  if (id === "toilet") p.openings = [{ id: uid("op"), wall: "front", x: 800, y: 0, w: 900, h: 2000, kind: "door", itemId: "door900" }];
+  else p.openings = [
+    { id: uid("op"), wall: "front", x: 900, y: 500, w: 1200, h: 1200, kind: "window", itemId: "win1200" },
+    { id: uid("op"), wall: "front", x: t.len - 1500, y: 0, w: 900, h: 2000, kind: "door", itemId: "door900" },
+  ];
+  writeParams(p.params); renderOpenings(); renderProjects(); doBuild(true);
+  toast("Шаблон применён");
+}
+
+/* ---------- проекты ---------- */
+function renderProjects() {
+  const sel = document.getElementById("projectSel");
+  sel.innerHTML = state.projects.map((p) => `<option value="${p.id}" ${p.id === state.activeId ? "selected" : ""}>${esc(p.name)}</option>`).join("");
+}
+function switchProject(id) {
+  state.activeId = id; saveState();
+  const p = activeProject();
+  writeParams(p.params); renderOpenings(); renderLayers(); rebuildScene(); renderBom(); renderCost(); renderChecks();
+  document.getElementById("buildInfo").textContent = `${p.elements.length} элементов в модели`;
+}
+function newProject() {
+  const p = demoProject("Новый объект");
+  p.elements = buildElements(p.params, p.openings);
+  state.projects.push(p); state.activeId = p.id; saveState();
+  renderProjects(); switchProject(p.id); toast("Проект создан");
+}
+
+/* ---------- всё сразу ---------- */
+function renderAll() {
+  renderMaterials(); renderShops(); renderNorms(); renderLayers();
+  renderProjects();
+  const p = activeProject();
+  writeParams(p.params); renderOpenings();
+  rebuildScene(); renderBom(); renderCost(); renderChecks(); renderManualList(); renderVersions();
+  document.getElementById("ovGeneral").value = p.overhead.general;
+  document.getElementById("ovDefect").value = p.overhead.defect;
+  document.getElementById("ovCommercial").value = p.overhead.commercial;
+  document.getElementById("ovMarkup").value = p.overhead.markup;
+  document.getElementById("beFixed").value = p.overhead.fixedMonthly;
+  document.getElementById("bePlan").value = p.overhead.planQty;
+  document.getElementById("buildInfo").textContent = `${p.params.len}×${p.params.wid}×${p.params.height} мм · элементов ${p.elements.length}`;
+}
+
+/* безопасная подписка: отсутствующий элемент не роняет инициализацию */
+function onEl(id, ev, fn) {
+  const el = document.getElementById(id);
+  if (el) el.addEventListener(ev, fn);
+  else console.warn("[init] нет элемента #" + id);
+}
+
+/* ---------- инициализация ---------- */
+function init() {
+  state = loadState();
+
+  document.getElementById("btnTheme").addEventListener("click", () => {
+    const cur = document.documentElement.dataset.theme === "light" ? "dark" : "light";
+    document.documentElement.dataset.theme = cur;
+    state.ui.theme = cur; saveState();
+    if (three) { three.scene.background = null; }
+  });
+  document.querySelectorAll(".tab").forEach((t) => t.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach((x) => x.classList.toggle("active", x === t));
+    document.querySelectorAll(".view").forEach((v) => v.classList.toggle("active", v.id === "view-" + t.dataset.view));
+    if (t.dataset.view === "bom") { renderBom(); }
+    if (t.dataset.view === "cost") { renderCost(); }
+    if (t.dataset.view === "project" && three) { setTimeout(() => window.dispatchEvent(new Event("resize")), 60); }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }));
+
+  document.getElementById("btnBuild").addEventListener("click", () => doBuild());
+  document.getElementById("btnTemplate").addEventListener("click", templatesModal);
+  document.getElementById("btnAddOpening").addEventListener("click", () => {
+    const p = activeProject();
+    p.openings.push({ id: uid("op"), wall: "front", x: 500, y: 500, w: 1200, h: 1200, kind: "window", itemId: "win1200" });
+    saveState(); renderOpenings();
+  });
+
+  document.querySelectorAll("[data-view3d]").forEach((b) => b.addEventListener("click", () => setView(b.dataset.view3d)));
+  document.getElementById("btnShot").addEventListener("click", exportModelPng);
+
+  document.getElementById("btnAddMat").addEventListener("click", () => {
+    state.materials.push({ id: uid("mat"), name: "Новая позиция", type: "piece", unit: "шт", massPerUnit: 1, price: 100, wastePct: 0 });
+    saveState(); renderMaterials();
+  });
+  document.getElementById("btnAddShop").addEventListener("click", () => {
+    state.shops.push({ id: uid("shop"), name: "Новый цех", rate: 550, bonus: 10, social: 30.2, machineHour: 250, shopPct: 25, masterPct: 8, chiefPct: 4 });
+    saveState(); renderShops(); renderNorms();
+  });
+  document.getElementById("btnAddNorm").addEventListener("click", () => {
+    state.norms.push({ id: uid("n"), op: "Новая операция", unit: "шт", minutes: 5, shopId: state.shops[0]?.id, stage: state.stages[0] });
+    saveState(); renderNorms();
+  });
+
+  ["ovGeneral", "ovDefect", "ovCommercial", "ovMarkup"].forEach((id) => {
+    document.getElementById(id).addEventListener("input", (ev) => {
+      const p = activeProject();
+      const key = { ovGeneral: "general", ovDefect: "defect", ovCommercial: "commercial", ovMarkup: "markup" }[id];
+      p.overhead[key] = Math.max(0, nv(ev.target));
+      saveState(); renderCost();
+    });
+  });
+  document.getElementById("beFixed").addEventListener("input", (ev) => {
+    activeProject().overhead.fixedMonthly = Math.max(0, nv(ev.target)); saveState(); renderCost();
+  });
+  document.getElementById("bePlan").addEventListener("input", (ev) => {
+    activeProject().overhead.planQty = Math.max(1, nv(ev.target)); saveState(); renderCost();
+  });
+
+  document.getElementById("stockLen").addEventListener("change", () => {
+    state.stock.length = Number(document.getElementById("stockLen").value); saveState(); renderCut();
+  });
+  document.getElementById("kerf").addEventListener("input", () => {
+    state.stock.kerf = Math.max(0, nv(document.getElementById("kerf"))); saveState(); renderCut();
+  });
+
+  onEl("btnSaveVersion", "click", saveVersion);
+  onEl("btnDxfImport", "click", () => document.getElementById("fileDxfDraw")?.click());
+  onEl("fileDxfDraw", "change", (e) => { const f = e.target.files?.[0]; if (f) importDxfFile(f); });
+  onEl("btnSummary", "click", showSummary);
+  onEl("btnParamsToggle", "click", () => {
+    const layout = document.querySelector(".layout-3d");
+    layout.classList.toggle("hide-params");
+    if (three) setTimeout(() => window.dispatchEvent(new Event("resize")), 80);
+  });
+  onEl("btnNewBlank", "click", () => {
+    if (!confirm("Очистить модель и начать с нуля?\n\nДа — старые элементы удалятся. Нет — ничего не изменится.")) return;
+    const p = activeProject();
+    pushHistory();
+    p.elements = [];
+    p.openings = [];
+    p.hiddenLayers = [];
+    p.name = p.name + " (с нуля)";
+    saveState();
+    rebuildScene(); renderLayers(); renderOpenings(); renderBom(); renderCost(); renderChecks(); renderManualList(); renderVersions();
+    if (three) { clearDrawPreview(); }
+    toast("Чистый лист: черти с нуля");
+  });
+  document.getElementById("btnVisual").addEventListener("click", presentationMode);
+  document.getElementById("btnFrameOnly").addEventListener("click", () => {
+    const pr = activeProject();
+    const onlyFrame = (pr.hiddenLayers || []).length < 2;
+    pr.hiddenLayers = onlyFrame ? state.layers.filter((l) => l.id !== "frame" && l.id !== "openings").map((l) => l.id) : [];
+    saveState(); renderLayers(); rebuildScene(); renderBom(); renderCost(); renderChecks();
+    toast(onlyFrame ? "Показан только каркас" : "Показаны все слои");
+  });
+  document.getElementById("chkAnno").addEventListener("change", (e) => setAnnoVisible(e.target.checked));
+
+  document.getElementById("btnExport").addEventListener("click", exportJson);
+  document.getElementById("btnImport").addEventListener("click", importJson);
+  document.getElementById("btnDemo").addEventListener("click", () => {
+    if (!confirm("Сбросить всё к демонстрационным данным?")) return;
+    state = demoState(); saveState(); renderAll(); toast("Демо загружено");
+  });
+  document.getElementById("btnBomCsv").addEventListener("click", bomCsv);
+  document.getElementById("btnBomPrint").addEventListener("click", () => window.print());
+  document.getElementById("btnCostCsv").addEventListener("click", costCsv);
+  document.getElementById("btnCostPrint").addEventListener("click", () => window.print());
+
+  document.getElementById("projectSel").addEventListener("change", (e) => switchProject(e.target.value));
+
+  // проекты: создать/копировать/удалить через заголовок селекта
+  const sel = document.getElementById("projectSel");
+  sel.addEventListener("dblclick", () => {
+    const name = prompt("Название нового проекта:", "Новый объект");
+    if (name) { const p = demoProject(name); p.elements = buildElements(p.params, p.openings); state.projects.push(p); state.activeId = p.id; saveState(); renderProjects(); switchProject(p.id); }
+  });
+
+  if (state.ui?.theme) document.documentElement.dataset.theme = state.ui.theme;
+
+  fillSecSelects();
+
+  // модель должна существовать ДО первого рендера
+  const p0 = activeProject();
+  if (!p0.elements.length) {
+    // params уже в состоянии; readParams() здесь нельзя — селекты ещё не заполнены
+    p0.elements = buildElements(p0.params, p0.openings || []);
+    saveState();
+  }
+
+  renderAll();
+
+  // 3D изолирован: если WebGL/CDN недоступны, расчёты продолжают работать
+  try {
+    if (init3D() !== false) rebuildScene();
+  } catch (e) {
+    console.warn("3D не запустился:", e);
+    const fb = document.getElementById("glFallback");
+    fb.style.display = "block";
+    fb.innerHTML = '<div class="alert bad">3D-просмотр недоступен (' + esc(e.message) + '). Расчёты и спецификация работают.</div>';
+  }
+
+  // ручное черчение (работает и без 3D — через числа)
+  try { initDraw(); } catch (e) { console.warn("Черчение не инициализировано:", e); }
+  try { initStages(); } catch (e) { console.warn("Этапы не инициализированы:", e); }
+
+  console.log("%cКаркас-Про готов", "color:#ff8a3d;font-weight:bold");
+}
+
+document.addEventListener("DOMContentLoaded", init);
+
+/* ============================================================
+   ЭТАП 3.1 — РУЧНОЕ ЧЕРЧЕНИЕ ПРОФИЛЕЙ
+   Клик по модели (с привязкой к сетке), точные координаты,
+   массив копий, отмена/повтор. Работает и без 3D — через числа.
+   ============================================================ */
+const draw = {
+  tool: "off", plane: "floor", sec: null, snap: 100,
+  first: null, marker: null, preview: null,
+  history: [], redo: [],
+};
+
+function initDraw() {
+  const toolEl = document.getElementById("drawTool");
+  const planeEl = document.getElementById("drawPlane");
+  const snapEl = document.getElementById("drawSnap");
+  const secEl = document.getElementById("drawSec");
+
+  // список сечений
+  const list = state.materials.filter((m) => m.type === "profile");
+  secEl.innerHTML = list.map((m) => `<option value="${m.id}">${esc(m.name)}</option>`).join("");
+  draw.sec = list[0]?.id || null;
+
+  toolEl.addEventListener("change", () => {
+    draw.tool = toolEl.value;
+    draw.first = null;
+    draw.poly = [];
+    clearDrawPreview();
+    if (three) three.controls.enabled = draw.tool === "off";
+    document.getElementById("drawModeChip").textContent = draw.tool === "off" ? "выкл" : "включено";
+    document.getElementById("drawModeChip").className = "chip " + (draw.tool === "off" ? "" : "warn");
+    document.getElementById("drawHint").textContent = draw.tool === "off"
+      ? "Включи инструмент и щёлкни две точки на модели."
+      : "Щёлкни первую точку, затем вторую. Привязка " + draw.snap + " мм.";
+  });
+  planeEl.addEventListener("change", () => { draw.plane = planeEl.value; draw.first = null; clearDrawPreview(); });
+  snapEl.addEventListener("change", () => {
+    draw.snap = Math.max(1, nv(snapEl, 100));
+    document.getElementById("drawHint").textContent = "Привязка " + draw.snap + " мм.";
+  });
+  secEl.addEventListener("change", () => { draw.sec = secEl.value; });
+
+  // кнопка «90°»: все новые линии строго по осям
+  draw.ortho = true;
+  const orthoBtn = document.getElementById("btnOrtho90");
+  if (orthoBtn) {
+    orthoBtn.classList.add("active");
+    orthoBtn.addEventListener("click", () => {
+      draw.ortho = !draw.ortho;
+      orthoBtn.classList.toggle("active", draw.ortho);
+      toast(draw.ortho ? "Режим 90°: только прямые углы" : "Свободный режим");
+    });
+  }
+
+  const lenInput = document.getElementById("drawLen");
+  if (lenInput) {
+    lenInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") { e.preventDefault(); buildByLength(); }
+    });
+  }
+
+  document.getElementById("btnUndo").addEventListener("click", undoDraw);
+  document.getElementById("btnRedo").addEventListener("click", redoDraw);
+  document.getElementById("btnDrawCancel").addEventListener("click", () => { draw.first = null; clearDrawPreview(); });
+
+  if (three) {
+    const canvas = three.renderer.domElement;
+    canvas.addEventListener("pointerdown", onCanvasClick);
+    canvas.addEventListener("pointermove", onCanvasMove);
+  }
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && draw.tool === "poly") { e.preventDefault(); closePoly(); return; }
+    if (e.key === "Escape") { draw.first = null; draw.poly = []; clearDrawPreview(); }
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); undoDraw(); }
+  });
+  renderManualList();
+}
+
+/* --- точка на выбранной плоскости --- */
+function planePoint(ev) {
+  if (!three) return null;
+  const canvas = three.renderer.domElement;
+  const r = canvas.getBoundingClientRect();
+  const mouse = new THREE.Vector2(
+    ((ev.clientX - r.left) / r.width) * 2 - 1,
+    -((ev.clientY - r.top) / r.height) * 2 + 1
+  );
+  const ray = new THREE.Raycaster();
+  ray.setFromCamera(mouse, three.camera);
+
+  let plane;
+  const p = activeProject().params;
+  const cx = p.len / 2, cy = p.height / 2, cz = p.wid / 2;
+  if (draw.plane === "floor") plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+  else if (draw.plane === "wallZ") plane = new THREE.Plane(new THREE.Vector3(0, 0, 1), 0);
+  else plane = new THREE.Plane(new THREE.Vector3(1, 0, 0), 0);
+
+  const hit = new THREE.Vector3();
+  if (!ray.ray.intersectPlane(plane, hit)) return null;
+  const s = draw.snap || 1;
+  return {
+    x: Math.round(hit.x / s) * s,
+    y: draw.plane === "floor" ? 0 : Math.round(hit.y / s) * s,
+    z: draw.plane === "wallZ" ? 0 : Math.round(hit.z / s) * s,
+  };
+}
+
+/* --- оси плоскости: u/v + фиксированная координата --- */
+function planeAxes() {
+  if (draw.plane === "floor") return { u: "x", v: "z", fixed: { y: 0 } };
+  if (draw.plane === "wallZ") return { u: "x", v: "y", fixed: { z: 0 } };
+  return { u: "z", v: "y", fixed: { x: 0 } };
+}
+
+/* ортогональный режим: выравниваем по доминирующей оси */
+function applyOrtho(p1, p2, axes) {
+  if (!draw.ortho) return { ...p2 };
+  const du = Math.abs(p2[axes.u] - p1[axes.u]);
+  const dv = Math.abs(p2[axes.v] - p1[axes.v]);
+  const out = { ...p2 };
+  if (du >= dv) out[axes.v] = p1[axes.v]; else out[axes.u] = p1[axes.u];
+  return out;
+}
+
+/* точные длина и угол — как в CAD */
+function applyLenAngle(p1, p2, axes) {
+  const lenEl = document.getElementById("drawLen");
+  const angEl = document.getElementById("drawAng");
+  const len = nv(lenEl, 0);
+  if (!(len > 0)) return p2;
+  const angRaw = String(angEl?.value ?? "").trim();
+  const ang = angRaw === "" ? null : nv(angEl, 0) * Math.PI / 180;
+  const dx = p2[axes.u] - p1[axes.u], dy = p2[axes.v] - p1[axes.v];
+  const a = ang === null ? Math.atan2(dy, dx) : ang;
+  const s = draw.snap || 1;
+  const out = { ...p2 };
+  out[axes.u] = Math.round((p1[axes.u] + Math.cos(a) * len) / s) * s;
+  out[axes.v] = Math.round((p1[axes.v] + Math.sin(a) * len) / s) * s;
+  return out;
+}
+
+function makeP(u, v, fixed) {
+  const p = { x: 0, y: 0, z: 0 };
+  p[u] = v; // no-op, ниже точные значения
+  return p;
+}
+function ptFrom(axes, u, v) {
+  const p = { x: 0, y: 0, z: 0 };
+  p[axes.u] = u;
+  p[axes.v] = v;
+  Object.assign(p, axes.fixed);
+  return p;
+}
+
+/* --- клик: линия, прямоугольник, полилиния --- */
+function onCanvasClick(ev) {
+  if (draw.tool === "off" || !three) return;
+  const axes = planeAxes();
+  let pt = planePoint(ev);
+  if (!pt) return;
+
+  // полилиния
+  if (draw.tool === "poly") {
+    if (draw.first) pt = applyLenAngle(draw.first, applyOrtho(draw.first, pt, axes), axes);
+    draw.poly = draw.poly || [];
+    draw.poly.push(pt);
+    if (draw.poly.length === 1) draw.first = pt;
+    showMarker(pt);
+    if (draw.poly.length >= 3) {
+      const first = draw.poly[0];
+      if (Math.hypot(pt.x - first.x, pt.y - first.y, pt.z - first.z) <= (draw.snap || 1) * 1.5) {
+        closePoly();
+        return;
+      }
+    }
+    document.getElementById("drawHint").textContent =
+      `Точек: ${draw.poly.length}. Двойной клик или Enter — замкнуть контур.`;
+    return;
+  }
+
+  if (!draw.first) {
+    draw.first = pt;
+    showMarker(pt);
+    // удобство: сразу даём ввести длину числом
+    const lenEl = document.getElementById("drawLen");
+    if (lenEl) { lenEl.focus(); lenEl.select?.(); }
+    document.getElementById("drawHint").textContent =
+      `Первая точка: ${pt.x}, ${pt.y}, ${pt.z}. Введи длину и Enter или щёлкни вторую точку.`;
+    return;
+  }
+
+  let p2 = applyOrtho(draw.first, pt, axes);
+  p2 = applyLenAngle(draw.first, p2, axes);
+  const p1 = draw.first;
+
+  if (Math.hypot(p2.x - p1.x, p2.y - p1.y, p2.z - p1.z) < 50) { toast("Слишком короткий элемент"); return; }
+
+  if (draw.tool === "rect") {
+    addRect(p1, p2, axes);
+    document.getElementById("drawHint").textContent = "Прямоугольник создан. Черти следующий.";
+  } else {
+    addManualProfile(p1, p2, draw.sec);
+    document.getElementById("drawHint").textContent = `Линия: ${mm(dist3(p1, p2))}. Следующая.`;
+  }
+  draw.first = null;
+  clearDrawPreview();
+}
+
+/* --- построение по введённой длине (Enter в поле «Длина») --- */
+function buildByLength() {
+  if (!draw.first || draw.tool === "off") return false;
+  const len = nv(document.getElementById("drawLen"), 0);
+  if (!(len > 0)) { toast("Введи длину, мм"); return false; }
+  const axes = planeAxes();
+  const angRaw = String(document.getElementById("drawAng")?.value ?? "").trim();
+  const ang = (angRaw === "" ? 0 : nv(document.getElementById("drawAng"), 0)) * Math.PI / 180;
+  const s = draw.snap || 1;
+  const p2 = { ...draw.first };
+  p2[axes.u] = Math.round((draw.first[axes.u] + Math.cos(ang) * len) / s) * s;
+  p2[axes.v] = Math.round((draw.first[axes.v] + Math.sin(ang) * len) / s) * s;
+  Object.assign(p2, axes.fixed);
+  addManualProfile(draw.first, p2, draw.sec);
+  toast(`Линия ${Math.round(len)} мм`);
+  draw.first = null;
+  clearDrawPreview();
+  document.getElementById("drawLen").value = "";
+  return true;
+}
+
+/* --- прямоугольник: 4 профиля по контуру --- */
+function addRect(p1, p2, axes) {
+  const A = ptFrom(axes, p1[axes.u], p1[axes.v]);
+  const C = ptFrom(axes, p2[axes.u], p2[axes.v]);
+  const B = ptFrom(axes, p2[axes.u], p1[axes.v]);
+  const D = ptFrom(axes, p1[axes.u], p2[axes.v]);
+  if (dist3(A, B) < 50 || dist3(B, C) < 50) { toast("Слишком маленький прямоугольник"); return; }
+  pushHistory();
+  const sec = draw.sec;
+  [[A, B], [B, C], [C, D], [D, A]].forEach(([a, b]) => {
+    addManualProfile(a, b, sec, { name: "Прямоугольник", noHistory: true });
+  });
+  toast(`Прямоугольник ${Math.round(Math.abs(p2[axes.u] - p1[axes.u]))}×${Math.round(Math.abs(p2[axes.v] - p1[axes.v]))} мм`);
+}
+
+/* --- замкнуть полилинию --- */
+function closePoly() {
+  const pts = draw.poly || [];
+  if (pts.length < 3) { toast("Нужно минимум 3 точки"); return; }
+  pushHistory();
+  const sec = draw.sec;
+  for (let i = 0; i < pts.length; i++) {
+    const a = pts[i], b = pts[(i + 1) % pts.length];
+    if (dist3(a, b) < 50) continue;
+    addManualProfile(a, b, sec, { name: "Полилиния", noHistory: true });
+  }
+  toast(`Контур замкнут: ${pts.length} сегментов`);
+  draw.poly = []; draw.first = null; clearDrawPreview();
+}
+
+/* --- превью --- */
+function onCanvasMove(ev) {
+  if (draw.tool === "off" || !three) return;
+  if (draw.tool === "poly") {
+    const pts = draw.poly || [];
+    if (!pts.length) return;
+    const pt = planePoint(ev);
+    if (!pt) return;
+    const last = pts[pts.length - 1];
+    if (!draw.preview) {
+      const geo = new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(last.x, last.y, last.z), new THREE.Vector3(pt.x, pt.y, pt.z),
+      ]);
+      draw.preview = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0xffb37a }));
+      three.scene.add(draw.preview);
+    } else {
+      draw.preview.geometry.setFromPoints([
+        new THREE.Vector3(last.x, last.y, last.z), new THREE.Vector3(pt.x, pt.y, pt.z),
+      ]);
+    }
+    return;
+  }
+  if (!draw.first) return;
+  const axes = planeAxes();
+  let pt = planePoint(ev);
+  if (!pt) return;
+  pt = applyLenAngle(draw.first, applyOrtho(draw.first, pt, axes), axes);
+  if (!draw.preview) {
+    const geo = new THREE.BufferGeometry().setFromPoints([
+      new THREE.Vector3(draw.first.x, draw.first.y, draw.first.z),
+      new THREE.Vector3(pt.x, pt.y, pt.z),
+    ]);
+    draw.preview = new THREE.Line(geo, new THREE.LineBasicMaterial({ color: 0xffb37a }));
+    three.scene.add(draw.preview);
+  } else {
+    draw.preview.geometry.setFromPoints([
+      new THREE.Vector3(draw.first.x, draw.first.y, draw.first.z),
+      new THREE.Vector3(pt.x, pt.y, pt.z),
+    ]);
+  }
+}
+
+function showMarker(pt) {
+  if (!three) return;
+  if (draw.marker) three.scene.remove(draw.marker);
+  const geo = new THREE.SphereGeometry(Math.max(20, draw.snap * 0.4), 12, 12);
+  draw.marker = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0xff8a3d }));
+  draw.marker.position.set(pt.x, pt.y, pt.z);
+  three.scene.add(draw.marker);
+}
+function clearDrawPreview() {
+  if (!three) return;
+  if (draw.preview) { three.scene.remove(draw.preview); draw.preview = null; }
+  if (draw.marker) { three.scene.remove(draw.marker); draw.marker = null; }
+}
+
+/* --- добавить профиль (мышью или числами) --- */
+function addManualProfile(p1, p2, secId, opts = {}) {
+  const p = activeProject();
+  if (!opts.noHistory) pushHistory();
+  const el = mkProfile(secId || draw.sec, { ...p1 }, { ...p2 }, opts.layer || "frame", opts.stage || "Сварка каркаса", opts.name || "Ручной профиль");
+  el.manual = true;
+  p.elements.push(el);
+  saveState();
+  rebuildScene(); renderBom(); renderCost(); renderChecks(); renderManualList();
+  if (three) { /* камера не сбрасывается */ }
+  return el;
+}
+
+/* --- история --- */
+function pushHistory() {
+  const p = activeProject();
+  draw.history.push(JSON.stringify(p.elements));
+  if (draw.history.length > 50) draw.history.shift();
+  draw.redo = [];
+}
+function undoDraw() {
+  const p = activeProject();
+  if (!draw.history.length) { toast("Нечего отменять"); return; }
+  draw.redo.push(JSON.stringify(p.elements));
+  p.elements = JSON.parse(draw.history.pop());
+  saveState();
+  rebuildScene(); renderBom(); renderCost(); renderChecks(); renderManualList();
+  toast("Отменено");
+}
+function redoDraw() {
+  const p = activeProject();
+  if (!draw.redo.length) { toast("Нечего повторять"); return; }
+  draw.history.push(JSON.stringify(p.elements));
+  p.elements = JSON.parse(draw.redo.pop());
+  saveState();
+  rebuildScene(); renderBom(); renderCost(); renderChecks(); renderManualList();
+  toast("Повторено");
+}
+
+/* --- список ручных элементов --- */
+function renderManualList() {
+  const box = document.getElementById("manualList");
+  if (!box) return;
+  const p = activeProject();
+  const manual = p.elements.filter((e) => e.manual && e.kind === "profile");
+  box.innerHTML = `
+    <div class="row" style="justify-content:space-between;margin-bottom:6px">
+      <b>Ручные элементы</b>
+      <button class="btn sm" id="btnManualNumbers">+ числами</button>
+    </div>
+    ${manual.length ? manual.map((e) => `
+      <div style="border:1px solid var(--line);border-radius:8px;padding:7px;margin-bottom:6px">
+        <div class="row" style="justify-content:space-between">
+          <small>${esc(matById(e.matId)?.name || e.matId)} · ${mm(dist3(e.p1, e.p2))}</small>
+          <span class="row" style="gap:4px">
+            <button class="btn sm ghost" data-arr="${e.id}" title="Массив копий">⧉</button>
+            <button class="btn sm ghost danger" data-delman="${e.id}">✕</button>
+          </span>
+        </div>
+        <div class="row" style="gap:3px;margin-top:5px">
+          ${["x", "y", "z"].map((k) => `<input type="number" data-p1="${e.id}" data-k="${k}" value="${e.p1[k]}" style="width:60px" title="точка 1 ${k}">`).join("")}
+          <span class="muted">→</span>
+          ${["x", "y", "z"].map((k) => `<input type="number" data-p2="${e.id}" data-k="${k}" value="${e.p2[k]}" style="width:60px" title="точка 2 ${k}">`).join("")}
+        </div>
+      </div>`).join("") : `<div class="muted">Пока пусто. Включи инструмент и нарисуй профиль на модели.</div>`}`;
+
+  document.getElementById("btnManualNumbers")?.addEventListener("click", manualByNumbers);
+  box.querySelectorAll("[data-delman]").forEach((b) => b.addEventListener("click", () => {
+    pushHistory();
+    p.elements = p.elements.filter((e) => e.id !== b.dataset.delman);
+    saveState(); rebuildScene(); renderBom(); renderCost(); renderChecks(); renderManualList();
+  }));
+  box.querySelectorAll("[data-arr]").forEach((b) => b.addEventListener("click", () => arrayModal(b.dataset.arr)));
+  box.querySelectorAll("input[data-p1],input[data-p2]").forEach((inp) => inp.addEventListener("change", () => {
+    const el = p.elements.find((e) => e.id === (inp.dataset.p1 || inp.dataset.p2));
+    if (!el) return;
+    pushHistory();
+    const key = inp.dataset.k;
+    (inp.dataset.p1 ? el.p1 : el.p2)[key] = nv(inp);
+    saveState(); rebuildScene(); renderBom(); renderCost(); renderChecks();
+  }));
+}
+
+/* --- ввод координат числами --- */
+function manualByNumbers() {
+  const p = activeProject().params;
+  openModal(`<h3>Профиль по координатам</h3>
+    <div class="grid g2">
+      <div class="field"><label class="f">Сечение</label><select id="mnSec">
+        ${state.materials.filter((m) => m.type === "profile").map((m) => `<option value="${m.id}" ${m.id === draw.sec ? "selected" : ""}>${esc(m.name)}</option>`).join("")}
+      </select></div>
+      <div class="field"><label class="f">Название</label><input type="text" id="mnName" value="Ручной профиль"></div>
+    </div>
+    <div class="grid g3" style="margin-top:10px">
+      <div class="field"><label class="f">x1</label><input type="number" id="mnx1" value="0"></div>
+      <div class="field"><label class="f">y1</label><input type="number" id="mny1" value="0"></div>
+      <div class="field"><label class="f">z1</label><input type="number" id="mnz1" value="0"></div>
+      <div class="field"><label class="f">x2</label><input type="number" id="mnx2" value="${p.len}"></div>
+      <div class="field"><label class="f">y2</label><input type="number" id="mny2" value="0"></div>
+      <div class="field"><label class="f">z2</label><input type="number" id="mnz2" value="0"></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="mnOk">Добавить</button>
+      <button class="btn ghost" id="mnCancel">Отмена</button>
+    </div>`);
+  document.getElementById("mnCancel").addEventListener("click", closeModal);
+  document.getElementById("mnOk").addEventListener("click", () => {
+    const p1 = { x: nv(document.getElementById("mnx1")), y: nv(document.getElementById("mny1")), z: nv(document.getElementById("mnz1")) };
+    const p2 = { x: nv(document.getElementById("mnx2")), y: nv(document.getElementById("mny2")), z: nv(document.getElementById("mnz2")) };
+    if (dist3(p1, p2) < 50) { toast("Точки совпадают"); return; }
+    addManualProfile(p1, p2, document.getElementById("mnSec").value, { name: sv(document.getElementById("mnName")) || "Ручной профиль" });
+    closeModal();
+    toast("Профиль добавлен");
+  });
+}
+
+/* --- массив копий --- */
+function arrayModal(id) {
+  openModal(`<h3>Массив копий</h3>
+    <p class="hint">Копирует выбранный профиль N раз со смещением по осям.</p>
+    <div class="grid g2">
+      <div class="field"><label class="f">Количество копий</label><input type="number" id="arN" value="3" min="1" max="200"></div>
+      <div class="field"><label class="f">Шаг, мм</label><input type="number" id="arStep" value="1000" min="1"></div>
+    </div>
+    <div class="grid g3" style="margin-top:10px">
+      <div class="field"><label class="f">по X</label><input type="checkbox" id="arX" checked></div>
+      <div class="field"><label class="f">по Y</label><input type="checkbox" id="arY"></div>
+      <div class="field"><label class="f">по Z</label><input type="checkbox" id="arZ"></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="arOk">Создать</button>
+      <button class="btn ghost" id="arCancel">Отмена</button>
+    </div>`);
+  document.getElementById("arCancel").addEventListener("click", closeModal);
+  document.getElementById("arOk").addEventListener("click", () => {
+    const p = activeProject();
+    const src = p.elements.find((e) => e.id === id);
+    if (!src) return;
+    const n = clamp(Math.round(nv(document.getElementById("arN"), 1)), 1, 200);
+    const step = nv(document.getElementById("arStep"), 1000);
+    const dx = document.getElementById("arX").checked ? 1 : 0;
+    const dy = document.getElementById("arY").checked ? 1 : 0;
+    const dz = document.getElementById("arZ").checked ? 1 : 0;
+    if (!dx && !dy && !dz) { toast("Выбери ось"); return; }
+    pushHistory();
+    for (let i = 1; i <= n; i++) {
+      const el = JSON.parse(JSON.stringify(src));
+      el.id = uid("el");
+      el.p1.x += dx * step * i; el.p1.y += dy * step * i; el.p1.z += dz * step * i;
+      el.p2.x += dx * step * i; el.p2.y += dy * step * i; el.p2.z += dz * step * i;
+      el.name = (src.name || "Профиль") + " (массив)";
+      p.elements.push(el);
+    }
+    saveState(); rebuildScene(); renderBom(); renderCost(); renderChecks(); renderManualList(); closeModal();
+    toast(`Создано копий: ${n}`);
+  });
+}
+
+/* ============================================================
+   ЭТАП 2 И 4 — ЭТАПЫ СБОРКИ, ВЕРСИИ, DXF, ПЕЧАТНАЯ СВОДКА
+   ============================================================ */
+
+/* ---------- видимость по этапам ---------- */
+function isElementVisible(el) {
+  const p = activeProject();
+  if ((p.hiddenLayers || []).includes(el.layer)) return false;
+  const f = state.ui?.stageFilter ?? -1;
+  if (f >= 0) {
+    const idx = state.stages.indexOf(el.stage);
+    if (idx < 0) return false;
+    const cum = state.ui?.stageCum !== false;
+    if (cum ? idx > f : idx !== f) return false;
+  }
+  return true;
+}
+
+function initStages() {
+  const sel = document.getElementById("stageSel");
+  if (!sel) return;
+  sel.innerHTML = `<option value="-1">все этапы</option>` +
+    state.stages.map((s, i) => `<option value="${i}">${esc(s)}</option>`).join("");
+  sel.value = String(state.ui?.stageFilter ?? -1);
+  document.getElementById("stageCum").checked = state.ui?.stageCum !== false;
+
+  sel.addEventListener("change", () => {
+    state.ui.stageFilter = Number(sel.value);
+    saveState(); rebuildScene();
+  });
+  document.getElementById("stageCum").addEventListener("change", (e) => {
+    state.ui.stageCum = e.target.checked;
+    saveState(); rebuildScene();
+  });
+  document.getElementById("btnAnim").addEventListener("click", playAssembly);
+}
+
+let animTimer = null;
+function playAssembly() {
+  const sel = document.getElementById("stageSel");
+  let i = 0;
+  clearInterval(animTimer);
+  state.ui.stageCum = true;
+  document.getElementById("stageCum").checked = true;
+  const step = () => {
+    if (i >= state.stages.length) {
+      clearInterval(animTimer);
+      state.ui.stageFilter = -1;
+      sel.value = "-1";
+      saveState(); rebuildScene();
+      toast("Сборка завершена");
+      return;
+    }
+    state.ui.stageFilter = i;
+    sel.value = String(i);
+    rebuildScene();
+    toast(state.stages[i], 900);
+    i++;
+  };
+  step();
+  animTimer = setInterval(step, 1100);
+}
+
+/* ---------- версии комплектаций ---------- */
+function saveVersion() {
+  const p = activeProject();
+  p.versions = p.versions || [];
+  const est = calcEstimate();
+  const n = p.versions.length + 1;
+  p.versions.push({
+    id: uid("ver"),
+    name: `Версия ${n}`,
+    date: new Date().toLocaleString("ru-RU"),
+    params: JSON.parse(JSON.stringify(p.params)),
+    elements: JSON.parse(JSON.stringify(p.elements)),
+    openings: JSON.parse(JSON.stringify(p.openings || [])),
+    snapshot: { full: est.full, price: est.price, profit: est.profit },
+  });
+  saveState(); renderVersions();
+  toast("Версия сохранена");
+}
+
+function renderVersions() {
+  const box = document.getElementById("versionsList");
+  if (!box) return;
+  const p = activeProject();
+  const list = p.versions || [];
+  box.innerHTML = list.length ? list.map((v) => `
+    <div class="row" style="justify-content:space-between;border-bottom:1px solid var(--line);padding:6px 0">
+      <div style="min-width:0">
+        <div style="font-weight:600">${esc(v.name)}</div>
+        <small>${esc(v.date)} · ${money(v.snapshot?.price || 0)} · себест. ${money(v.snapshot?.full || 0)}</small>
+      </div>
+      <div class="row" style="gap:4px">
+        <button class="btn sm" data-vload="${v.id}">Загрузить</button>
+        <button class="btn sm ghost danger" data-vdel="${v.id}">✕</button>
+      </div>
+    </div>`).join("") : `<div class="muted">Пока нет версий.</div>`;
+
+  box.querySelectorAll("[data-vload]").forEach((b) => b.addEventListener("click", () => {
+    const v = (p.versions || []).find((x) => x.id === b.dataset.vload);
+    if (!v) return;
+    if (!confirm(`Загрузить «${v.name}»? Текущая модель будет заменена (её можно сохранить как версию заранее).`)) return;
+    p.params = JSON.parse(JSON.stringify(v.params));
+    p.elements = JSON.parse(JSON.stringify(v.elements));
+    p.openings = JSON.parse(JSON.stringify(v.openings || []));
+    saveState(); writeParams(p.params); renderOpenings(); rebuildScene(); renderBom(); renderCost(); renderChecks(); renderVersions();
+    toast("Версия загружена");
+  }));
+  box.querySelectorAll("[data-vdel]").forEach((b) => b.addEventListener("click", () => {
+    p.versions = (p.versions || []).filter((x) => x.id !== b.dataset.vdel);
+    saveState(); renderVersions();
+  }));
+}
+
+/* ---------- DXF ---------- */
+function parseDxfSegments(text) {
+  const lines = text.split(/\r?\n/).map((s) => s.trim());
+  const pairs = [];
+  for (let i = 0; i + 1 < lines.length; i += 2) pairs.push([lines[i], lines[i + 1]]);
+  const segs = [];
+  let i = 0;
+  while (i < pairs.length) {
+    const [code, val] = pairs[i];
+    if (code === "0" && val === "LINE") {
+      const d = {}; i++;
+      while (i < pairs.length && pairs[i][0] !== "0") { d[pairs[i][0]] = pairs[i][1]; i++; }
+      segs.push({ x1: +d["10"], y1: +d["20"], x2: +d["11"], y2: +d["21"] });
+      continue;
+    }
+    if (code === "0" && val === "LWPOLYLINE") {
+      const xs = [], ys = []; i++;
+      while (i < pairs.length && pairs[i][0] !== "0") {
+        if (pairs[i][0] === "10") xs.push(+pairs[i][1]);
+        if (pairs[i][0] === "20") ys.push(+pairs[i][1]);
+        i++;
+      }
+      for (let k = 0; k < Math.min(xs.length, ys.length) - 1; k++) {
+        segs.push({ x1: xs[k], y1: ys[k], x2: xs[k + 1], y2: ys[k + 1] });
+      }
+      continue;
+    }
+    i++;
+  }
+  return segs.filter((s) => [s.x1, s.y1, s.x2, s.y2].every(Number.isFinite));
+}
+
+function importDxfFile(file) {
+  const rd = new FileReader();
+  rd.onload = () => {
+    const segs = parseDxfSegments(String(rd.result));
+    if (!segs.length) { toast("В DXF не найдено линий или полилиний"); return; }
+    const xs = segs.flatMap((s) => [s.x1, s.x2]);
+    const ys = segs.flatMap((s) => [s.y1, s.y2]);
+    const w = Math.max(...xs) - Math.min(...xs);
+    const h = Math.max(...ys) - Math.min(...ys);
+    if (!confirm(`Найдено ${segs.length} отрезков, габарит ${Math.round(w)}×${Math.round(h)} мм.\n\nСоздать профили этим контуром?`)) return;
+    if (!draw.sec) { toast("Выбери сечение"); return; }
+    pushHistory();
+    const p = activeProject();
+    let added = 0;
+    segs.forEach((s) => {
+      if (Math.hypot(s.x2 - s.x1, s.y2 - s.y1) < 50) return;
+      const el = mkProfile(draw.sec, { x: s.x1, y: s.y1, z: 0 }, { x: s.x2, y: s.y2, z: 0 }, "frame", "Заготовка и резка", "Из DXF");
+      el.manual = true;
+      p.elements.push(el);
+      added++;
+    });
+    saveState(); rebuildScene(); renderBom(); renderCost(); renderChecks(); renderManualList();
+    toast(`Из DXF добавлено профилей: ${added}`);
+  };
+  rd.readAsText(file);
+}
+
+/* ---------- печатная сводка ---------- */
+function showSummary() {
+  const p = activeProject();
+  const est = calcEstimate();
+  const bom = est.bom;
+  const w = est.work;
+  const rows = `
+    <table class="plain" style="width:100%;font-size:12.5px">
+      <tr><td>Объект</td><td><b>${esc(p.name)}</b></td></tr>
+      <tr><td>Габариты</td><td>${fmt(p.params.len, 0)} × ${fmt(p.params.wid, 0)} × ${fmt(p.params.height, 0)} мм</td></tr>
+      <tr><td>Кровля</td><td>${p.params.roof === "gable" ? "двускатная" : p.params.roof === "mono" ? "односкатная" : "плоская"}${p.params.rise ? ", подъём " + fmt(p.params.rise, 0) + " мм" : ""}</td></tr>
+      <tr><td>Элементов модели</td><td>${fmt(p.elements.length, 0)}</td></tr>
+      <tr><td>Позиций спецификации</td><td>${fmt(bom.rows.length, 0)}</td></tr>
+      <tr><td>Масса металла</td><td>${fmt(bom.massTotal, 1)} кг</td></tr>
+      <tr><td>Материалы</td><td>${money(est.materials)}</td></tr>
+      <tr><td>Работы (${fmt(w.hoursTotal, 1)} ч)</td><td>${money(est.works)}</td></tr>
+      <tr><td>Полная себестоимость</td><td><b>${money(est.full)}</b></td></tr>
+      <tr><td>Цена</td><td><b>${money(est.price)}</b></td></tr>
+      <tr><td>Прибыль</td><td>${money(est.profit)} (${fmt(est.marginPct, 1)} %)</td></tr>
+      <tr><td>Точка безубыточности</td><td>${est.breakEven ?? "—"} шт/мес</td></tr>
+    </table>`;
+  openModal(`<h3>Сводка проекта</h3>${rows}
+    <div class="row" style="margin-top:12px">
+      <button class="btn primary" id="sumPrint">🖨 Печать</button>
+      <button class="btn ghost" id="sumClose">Закрыть</button>
+    </div>`);
+  document.getElementById("sumClose").addEventListener("click", closeModal);
+  document.getElementById("sumPrint").addEventListener("click", () => {
+    const w2 = window.open("", "_blank");
+    w2.document.write(`<html><head><meta charset="utf-8"><title>Сводка ${esc(p.name)}</title>
+      <style>body{font:13px Arial;padding:24px}table{border-collapse:collapse;width:100%}td{padding:6px;border-bottom:1px solid #ccc}</style>
+      </head><body><h2>${esc(p.name)}</h2>${rows}</body></html>`);
+    w2.document.close(); w2.print();
+  });
+}
+
+/* ============================================================
+   ЭТАП 5 — ПРЕЗЕНТАЦИОННЫЙ ВИЗУАЛ: РАЗМЕРЫ И ВЫНОСКИ
+   Размерные линии L/W/H со стрелками + подписи материалов,
+   сечений и шага стоек. Стиль как на референсе заказчика.
+   ============================================================ */
+const ANNO_COLOR = 0xff3b30;   // красный, как на референсе
+
+/* ---- чистые данные аннотаций (без Three.js — можно тестировать) ---- */
+function annotationSpecs(p) {
+  const L = Number(p.params.len), W = Number(p.params.wid), H = Number(p.params.height);
+  const rise = Number(p.params.rise) || 0;
+  const frame = matById(p.params.frameSec);
+  const post = matById(p.params.postSec);
+  const rail = matById(p.params.railSec);
+  const secText = (m) => m ? `${m.a}×${m.b}×${m.t} мм` : "—";
+  const isGable = p.params.roof === "gable";
+  const top = H + (isGable || p.params.roof === "mono" ? rise : 0);
+
+  const specs = [
+    { kind: "dim", a: { x: 0, y: 0, z: 0 }, b: { x: L, y: 0, z: 0 }, off: { x: 0, y: 0, z: -520 }, text: `${Math.round(L)} мм` },
+    { kind: "dim", a: { x: 0, y: 0, z: 0 }, b: { x: 0, y: 0, z: W }, off: { x: -520, y: 0, z: 0 }, text: `${Math.round(W)} мм` },
+    { kind: "dim", a: { x: 0, y: 0, z: 0 }, b: { x: 0, y: H, z: 0 }, off: { x: -520, y: 0, z: -520 }, text: `${Math.round(H)} мм` },
+    { kind: "leader", from: { x: L * 0.5, y: H, z: W }, to: { x: L * 0.72, y: H + 720, z: W + 980 },
+      text: `ВЕРХНЯЯ ОБВЯЗКА: сталь ${secText(rail)}` },
+    { kind: "leader", from: { x: L * 0.22, y: 0, z: W }, to: { x: L * 0.06, y: -820, z: W + 980 },
+      text: `НИЖНЯЯ ОБВЯЗКА: сталь ${secText(rail)}` },
+    { kind: "leader", from: { x: L * 0.74, y: H * 0.55, z: 0 }, to: { x: L * 0.94, y: H * 0.22, z: W + 1250 },
+      text: `ВЕРТИКАЛЬНЫЕ СТОЙКИ: профиль ${secText(post)} · шаг ${Math.round(p.params.step)} мм` },
+  ];
+
+  if (isGable) {
+    specs.push({
+      kind: "leader", from: { x: L * 0.5, y: top, z: W / 2 }, to: { x: L * 0.5, y: top + 900, z: W / 2 + 900 },
+      text: `КОНЁК: профиль ${secText(frame)} · подъём ${Math.round(rise)} мм`,
+    });
+  }
+  return specs;
+}
+
+/* ---- текстовый спрайт ---- */
+function makeLabel(text) {
+  const fs = 42, pad = 20;
+  const cv = document.createElement("canvas");
+  const ctx = cv.getContext("2d");
+  ctx.font = `bold ${fs}px Arial, sans-serif`;
+  const w = Math.ceil(ctx.measureText(text).width) + pad * 2;
+  const h = fs + pad * 2;
+  cv.width = w; cv.height = h;
+  const c2 = cv.getContext("2d");
+  c2.font = `bold ${fs}px Arial, sans-serif`;
+  c2.fillStyle = "rgba(12,16,20,0.88)";
+  const r = 14;
+  c2.beginPath();
+  c2.moveTo(r, 0); c2.lineTo(w - r, 0); c2.quadraticCurveTo(w, 0, w, r);
+  c2.lineTo(w, h - r); c2.quadraticCurveTo(w, h, w - r, h);
+  c2.lineTo(r, h); c2.quadraticCurveTo(0, h, 0, h - r);
+  c2.lineTo(0, r); c2.quadraticCurveTo(0, 0, r, 0);
+  c2.closePath(); c2.fill();
+  c2.fillStyle = "#ffffff";
+  c2.textBaseline = "middle";
+  c2.fillText(text, pad, h / 2 + 2);
+
+  const tex = new THREE.CanvasTexture(cv);
+  tex.minFilter = THREE.LinearFilter;
+  const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, transparent: true, depthTest: false, depthWrite: false }));
+  const k = 3.2; // 1 px ≈ 3,2 мм
+  sprite.scale.set(w * k, h * k, 1);
+  sprite.renderOrder = 999;
+  return sprite;
+}
+
+/* ---- построение всех аннотаций ---- */
+function buildAnnotations() {
+  if (!three) return 0;
+  const p = activeProject();
+  const g = three.annotations;
+  if (!g) return 0;
+  while (g.children.length) {
+    const c = g.children.pop();
+    c.geometry?.dispose?.();
+    if (c.material?.map) c.material.map.dispose();
+    c.material?.dispose?.();
+  }
+  if (document.getElementById("chkAnno") && !document.getElementById("chkAnno").checked) return 0;
+  if (!p.elements.length) return 0;   // пустая модель — никаких размеров и выносок
+
+  const specs = annotationSpecs(p);
+  const matLine = new THREE.LineBasicMaterial({ color: ANNO_COLOR, depthTest: false, transparent: true, opacity: 0.95 });
+  const matArrow = new THREE.MeshBasicMaterial({ color: ANNO_COLOR, depthTest: false });
+
+  const line = (a, b) => {
+    const geo = new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(a.x, a.y, a.z), new THREE.Vector3(b.x, b.y, b.z)]);
+    const l = new THREE.Line(geo, matLine);
+    l.renderOrder = 900;
+    g.add(l);
+  };
+  const arrow = (at, dir) => {
+    const cone = new THREE.Mesh(new THREE.ConeGeometry(32, 110, 10), matArrow);
+    cone.position.set(at.x, at.y, at.z);
+    const d = new THREE.Vector3(dir.x, dir.y, dir.z).normalize();
+    cone.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d);
+    cone.renderOrder = 901;
+    g.add(cone);
+  };
+
+  specs.forEach((s) => {
+    if (s.kind === "dim") {
+      const A = { x: s.a.x + s.off.x, y: s.a.y + s.off.y, z: s.a.z + s.off.z };
+      const B = { x: s.b.x + s.off.x, y: s.b.y + s.off.y, z: s.b.z + s.off.z };
+      line(s.a, A); line(s.b, B); line(A, B);
+      const dx = B.x - A.x, dy = B.y - A.y, dz = B.z - A.z;
+      const len = Math.hypot(dx, dy, dz) || 1;
+      arrow(A, { x: dx, y: dy, z: dz });
+      arrow(B, { x: -dx, y: -dy, z: -dz });
+      const mid = { x: (A.x + B.x) / 2, y: (A.y + B.y) / 2, z: (A.z + B.z) / 2 };
+      const label = makeLabel(s.text);
+      const n = { x: dx / len, y: dy / len, z: dz / len };
+      label.position.set(mid.x - n.z * 260, mid.y + 140, mid.z + n.x * 260);
+      g.add(label);
+    } else {
+      line(s.from, s.to);
+      arrow(s.from, { x: s.from.x - s.to.x, y: s.from.y - s.to.y, z: s.from.z - s.to.z });
+      const label = makeLabel(s.text);
+      const k = 0.5;
+      label.position.set(
+        s.to.x + (s.to.x - s.from.x) * k + 420,
+        s.to.y + (s.to.y - s.from.y) * k,
+        s.to.z + (s.to.z - s.from.z) * k
+      );
+      g.add(label);
+    }
+  });
+  return g.children.length;
+}
+
+/* ---- переключатель и презентационный режим ---- */
+function setAnnoVisible(on) {
+  const p = activeProject();
+  p.showAnno = !!on;
+  saveState();
+  rebuildScene();
+}
+
+function presentationMode() {
+  const on = !(three && three.presentation);
+  const chk = document.getElementById("chkAnno");
+  if (chk) chk.checked = on;
+  activeProject().showAnno = on;
+  saveState();
+  if (three) {
+    three.presentation = on;
+    three.scene.background = on ? new THREE.Color(0x0b0f13) : new THREE.Color(0x121920);
+    if (three.grid) three.grid.visible = !on;
+    if (three.axes) three.axes.visible = !on;
+    if (three.ground) three.ground.visible = on;
+  }
+  rebuildScene();
+  setView("iso");
+  toast(on ? "Презентация: тени, размеры, чистый фон" : "Обычный вид");
+}
+
+</script>
+</body>
+</html>
