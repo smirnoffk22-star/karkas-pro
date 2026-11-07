@@ -117,6 +117,18 @@ details.formula pre{margin:7px 0 0;font:11.5px/1.55 ui-monospace,Menlo,monospace
 #drawBarBtn{display:flex;align-items:center;gap:6px}
 #btnOrtho90.active{background:var(--accent);border-color:var(--accent);color:#1a1206}
 html[data-theme="light"] #btnOrtho90.active{color:#fff}
+
+/* ===== мобильный режим: крупные контролы, минимум прицеливания ===== */
+@media (max-width:640px){
+  #canvasWrap{height:52vh;min-height:260px}
+  #drawTopBar .field{flex:1 1 46% !important}
+  #drawTopBar input,#drawTopBar select{min-height:44px;font-size:16px}
+  #drawTopBar button{min-height:44px;font-size:14px;flex:1 1 46%}
+  .top-actions .btn{min-height:40px}
+  .tab{padding:10px 14px;font-size:14px}
+  table{font-size:12px}
+  .layout-3d{gap:8px}
+}
 </style>
 </head>
 <body>
@@ -229,6 +241,7 @@ html[data-theme="light"] #btnOrtho90.active{color:#fff}
               <button class="btn sm ghost" id="btnDrawCancel">Сброс</button>
               <button class="btn sm" id="btnDxfImport">Импорт DXF</button>
               <input type="file" id="fileDxfDraw" accept=".dxf" hidden>
+              <button class="btn sm" id="btnNumbersTop">Числами</button>
               <button class="btn sm primary" id="btnNewBlank">С нуля</button>
             </div>
             <div class="hint" id="drawHint" style="margin-top:6px">Выбери инструмент и материал, затем щёлкай по модели.</div>
@@ -1844,7 +1857,7 @@ function init() {
   onEl("btnSaveVersion", "click", saveVersion);
   onEl("btnDxfImport", "click", () => document.getElementById("fileDxfDraw")?.click());
   onEl("fileDxfDraw", "change", (e) => { const f = e.target.files?.[0]; if (f) importDxfFile(f); });
-  onEl("btnSummary", "click", showSummary);
+  onEl("btnNumbersTop", "click", manualByNumbers);
   onEl("btnParamsToggle", "click", () => {
     const layout = document.querySelector(".layout-3d");
     layout.classList.toggle("hide-params");
@@ -2001,6 +2014,12 @@ function initDraw() {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") { e.preventDefault(); undoDraw(); }
   });
   renderManualList();
+
+  // на телефоне точное черчение мышью неудобно — подсказываем числовой путь
+  if (matchMedia("(max-width: 640px)").matches) {
+    document.getElementById("drawHint").textContent =
+      "На телефоне удобнее кнопка «Числами»: задаёшь координаты и длину — профиль строится точно.";
+  }
 }
 
 /* --- точка на выбранной плоскости --- */
